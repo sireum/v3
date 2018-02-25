@@ -26,6 +26,10 @@
 package org.sireum.util.jvm
 
 import java.io._
+import java.nio.ByteBuffer
+import java.util.concurrent.TimeUnit
+
+import com.zaxxer.nuprocess.{NuAbstractProcessHandler, NuProcessBuilder}
 import org.sireum.util._
 
 import scala.sys.process.ProcessIO
@@ -43,7 +47,6 @@ object Exec {
 }
 
 final class Exec {
-  private val sb = new StringBuffer
 
   val env: MMap[String, String] = mmapEmpty
 
@@ -68,53 +71,46 @@ final class Exec {
 
   def run(waitTime: Long, args: Seq[String], input: Option[String],
           dir: Option[File], extraEnv: (String, String)*): Exec.Result = {
-    import scala.sys.process._
-    try {
-      val p = Process({
-        val pb = new java.lang.ProcessBuilder(args: _*)
-        pb.redirectErrorStream(true)
-        dir.foreach(d => pb.directory(d))
-        val m = pb.environment
-        for ((k, v) <- env ++ extraEnv) {
-          m.put(k, v)
-        }
-        pb
-      }).run(new ProcessIO(inputF(input), outputF, errorF))
-      if (waitTime <= 0) {
-        val x = p.exitValue
-        Exec.StringResult(sb.toString, x)
-      } else {
-        Thread.sleep(waitTime)
-        if (p.isAlive) {
-          p.destroy()
-          Exec.Timeout
-        } else {
-          Exec.StringResult(sb.toString, p.exitValue)
-        }
-      }
-    } catch {
-      case e: Exception => Exec.ExceptionRaised(e)
+    import scala.collection.JavaConverters._
+    val commands = new java.util.ArrayList(args.asJavaCollection)
+    val m = System.getenv()
+    for ((k, v) <- env ++ extraEnv) {
+      m.put(k, v)
     }
-  }
+    val npb = new NuProcessBuilder(commands, m)
+    val sb = new java.lang.StringBuilder()
+    npb.setProcessListener(new NuAbstractProcessHandler {
+      def append(buffer: ByteBuffer): Unit = {
+        val bytes = new Array[Byte](buffer.remaining)
+        buffer.get(bytes)
+        bytes.foreach(b => sb.append(b.toChar))
+      }
 
-  def inputF(in: Option[String])(out: OutputStream) {
-    val osw = new OutputStreamWriter(out)
-    try in match {
-      case Some(s) => osw.write(s, 0, s.length)
+      override def onStderr(buffer: ByteBuffer, closed: Boolean): Unit = {
+        if (!closed) append(buffer)
+      }
+
+      override def onStdout(buffer: ByteBuffer, closed: Boolean): Unit = {
+        if (!closed) append(buffer)
+      }
+    })
+    val p = npb.start()
+    input match {
+      case Some(in) =>
+        p.writeStdin(ByteBuffer.wrap(in.getBytes))
+        p.closeStdin(false)
       case _ =>
     }
-    finally osw.close()
-  }
-
-  def outputF(is: InputStream) {
-    val buffer = new Array[Byte](10 * 1024)
-    try {
-      var n = is.read(buffer)
-      while (n != -1) {
-        sb.append(new String(buffer, 0, n))
-        n = is.read(buffer)
-      }
-    } finally is.close()
+    val exitCode = p.waitFor(waitTime, TimeUnit.MILLISECONDS)
+    if (exitCode != Int.MinValue) return Exec.StringResult(sb.toString, exitCode)
+    if (p.isRunning) {
+      p.destroy(false)
+      p.waitFor(500, TimeUnit.MICROSECONDS)
+    }
+    if (p.isRunning) {
+      p.destroy(true)
+    }
+    Exec.Timeout
   }
 
   def errorF(is: InputStream) {
