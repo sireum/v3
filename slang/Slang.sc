@@ -71,9 +71,7 @@ object Module {
       ivy"org.scalameta::scalameta::$scalaMetaVersion"
     )
 
-    final override def deps = Seq(libraryObject, astObject)
-
-    def libraryObject: Runtime.Module.Library
+    final override def deps = Seq(astObject)
 
     def astObject: Ast
 
@@ -83,11 +81,7 @@ object Module {
 
     final override def ivyDeps = Agg.empty
 
-    final override def deps = Seq(libraryObject, astObject, parserObject)
-
-    def libraryObject: Runtime.Module.Library
-
-    def astObject: Ast
+    final override def deps = Seq(parserObject)
 
     def parserObject: Parser
 
