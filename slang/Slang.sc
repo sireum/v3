@@ -23,8 +23,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import $file.runtime.Sireum, Sireum.Module._
-import $file.runtime.Runtime
+import SireumModule._
 import mill._
 import mill.scalalib._
 
@@ -62,7 +61,7 @@ object Module {
 
     final override def deps = Seq(libraryObject)
 
-    def libraryObject: Runtime.Module.Library
+    def libraryObject: CrossJvmJsPublish
   }
 
   trait Parser extends Module {
