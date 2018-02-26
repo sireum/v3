@@ -34,7 +34,7 @@ import org.sireum.message._
 import org.sireum.{None => SNone, Some => SSome}
 import org.sireum.test.SireumRcSpec
 
-class TruthTableVerifierTest extends SireumRcSpec {
+class TruthTableVerifierRcTest extends SireumRcSpec {
   lazy val textResources: scala.collection.Map[scala.Seq[Predef.String], Predef.String] =
     RC.text(Seq())((p, _) => p.head == "truthtable" && p.last.endsWith(".slang"))
 

@@ -31,318 +31,318 @@ import org.sireum.lang.ast._
 import org.sireum.lang.parser._
 import org.sireum.lang.symbol._
 import org.sireum.lang.tipe._
-import org.sireum.test.SireumSpec
+import org.sireum.test._
 
-class TypeCheckerTest extends SireumSpec {
+class TypeCheckerTest extends TestSuite {
 
-  {
-
-    implicit val _spec: SireumSpec = this
+  val tests = Tests {
 
     "Passing" - {
 
       "Worksheet" - {
 
-        *(passingWorksheet("""import org.sireum._
-                             |@datatype trait Or[L, R]
-                             |@datatype class Left[L, R](value: L) extends Or[L, R]
-                             |@datatype class Right[L, R](value: R) extends Or[L, R]
-                             |val or: Or[Z, B] = Left(5)
-                             |or match {
-                             |  case Left(n) => assert(n == 5)
-                             |  case Right(b) => halt("Impossible")
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |@datatype trait Or[L, R]
+                               |@datatype class Left[L, R](value: L) extends Or[L, R]
+                               |@datatype class Right[L, R](value: R) extends Or[L, R]
+                               |val or: Or[Z, B] = Left(5)
+                               |or match {
+                               |  case Left(n) => assert(n == 5)
+                               |  case Right(b) => halt("Impossible")
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |@enum object Three {
-                             |  'One
-                             |  'Two
-                             |  'Three
-                             |}
-                             |val twoOpt: Option[Three.Type] = Three.byOrdinal(1)
-                             |assert(twoOpt == Some(Three.Two))
-                             |val threeOpt: Option[Three.Type] = Three.byName("Three")
-                             |assert(threeOpt == Some(Three.Three))
-                             |assert(Three.One.ordinal == 0)
-                             |assert(Three.Two.name == "Two")
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |@enum object Three {
+                               |  'One
+                               |  'Two
+                               |  'Three
+                               |}
+                               |val twoOpt: Option[Three.Type] = Three.byOrdinal(1)
+                               |assert(twoOpt == Some(Three.Two))
+                               |val threeOpt: Option[Three.Type] = Three.byName("Three")
+                               |assert(threeOpt == Some(Three.Three))
+                               |assert(Three.One.ordinal == 0)
+                               |assert(Three.Two.name == "Two")
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |object L1 {
-                             |  @enum object E { 'A }
-                             |  object L2 {
-                             |    def bar(): Unit = {
-                             |      def foo(e: E.Type): Unit = {
-                             |        e match {
-                             |          case E.A =>
-                             |        }
-                             |      }
-                             |    }
-                             |  }
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |object L1 {
+                               |  @enum object E { 'A }
+                               |  object L2 {
+                               |    def bar(): Unit = {
+                               |      def foo(e: E.Type): Unit = {
+                               |        e match {
+                               |          case E.A =>
+                               |        }
+                               |      }
+                               |    }
+                               |  }
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |
-                             |object FooLike {
-                             |  @sig trait T {
-                             |    def fooLike(): Z = {
-                             |      return 10
-                             |    }
-                             |  }
-                             |}
-                             |
-                             |@datatype class Foo(x: Z) extends FooLike.T {
-                             |  @pure def foo(): Z = {
-                             |    return x
-                             |  }
-                             |}
-                             |
-                             |@msig trait BarLike {
-                             |  @pure def bar: Z = {
-                             |    return Z.random
-                             |  }
-                             |}
-                             |
-                             |@record class Bar(var x: Z, foo: Foo) extends BarLike
-                             |
-                             |val bar = Bar(4, Foo(3))
-                             |bar.x = bar.bar
-                             |assert(bar.foo.foo() != bar.foo.fooLike())
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |
+                               |object FooLike {
+                               |  @sig trait T {
+                               |    def fooLike(): Z = {
+                               |      return 10
+                               |    }
+                               |  }
+                               |}
+                               |
+                               |@datatype class Foo(x: Z) extends FooLike.T {
+                               |  @pure def foo(): Z = {
+                               |    return x
+                               |  }
+                               |}
+                               |
+                               |@msig trait BarLike {
+                               |  @pure def bar: Z = {
+                               |    return Z.random
+                               |  }
+                               |}
+                               |
+                               |@record class Bar(var x: Z, foo: Foo) extends BarLike
+                               |
+                               |val bar = Bar(4, Foo(3))
+                               |bar.x = bar.bar
+                               |assert(bar.foo.foo() != bar.foo.fooLike())
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |@pure def foo(x: Z): Z = { return x + 1 }
-                             |assert(foo(4) > 4)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |@pure def foo(x: Z): Z = { return x + 1 }
+                               |assert(foo(4) > 4)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val b = Bag.empty[Z] + 1 +# 2 ~> 3
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val b = Bag.empty[Z] + 1 +# 2 ~> 3
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val b = Bag ++ ISZ(1, 2, 3)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val b = Bag ++ ISZ(1, 2, 3)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val zs: ZS = ZS(1, 2, 3).map[Z](x => x + 1).map(x => x + 2)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val zs: ZS = ZS(1, 2, 3).map[Z](x => x + 1).map(x => x + 2)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |import org.sireum.Z8._
-                             |val z8s: ISZ[Z8] = ISZ(z8"1", z8"2", z8"3").map((x: Z8) => x + z8"1")
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |import org.sireum.Z8._
+                               |val z8s: ISZ[Z8] = ISZ(z8"1", z8"2", z8"3").map((x: Z8) => x + z8"1")
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val zs: ZS = ZS(1, 2, 3).map[Z](x => x + 1)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val zs: ZS = ZS(1, 2, 3).map[Z](x => x + 1)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val bs: MSZ[MSZ[B]] = for (s <- MSZ(ZS(0), ZS(1), ZS(3)); n <- s) yield MSZ(n == 0)
-                             |bs(0)(1) = bs(1)(0)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val bs: MSZ[MSZ[B]] = for (s <- MSZ(ZS(0), ZS(1), ZS(3)); n <- s) yield MSZ(n == 0)
+                               |bs(0)(1) = bs(1)(0)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val bs: ISZ[Z] = for (s <- for (i <- 0 until 10) yield ISZ(i); n <- s if n % 2 == 1) yield n
-                             |""".stripMargin))
+        * - passingWorksheet(
+          """import org.sireum._
+            |val bs: ISZ[Z] = for (s <- for (i <- 0 until 10) yield ISZ(i); n <- s if n % 2 == 1) yield n
+            |""".stripMargin
+        )
 
-        *(passingWorksheet("""import org.sireum._
-                             |val bs: MS[Z8, B] = for (b <- MS[Z8, B](T, F)) yield b
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val bs: MS[Z8, B] = for (b <- MS[Z8, B](T, F)) yield b
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val bs: ISZ[B] = for (b <- ISZ(T, F)) yield b
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val bs: ISZ[B] = for (b <- ISZ(T, F)) yield b
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |for (i <- 0 until 10 if i % 2 == 0; j <- i until 10) {
-                             |  assert(j >= i)
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |for (i <- 0 until 10 if i % 2 == 0; j <- i until 10) {
+                               |  assert(j >= i)
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val xOpt: Option[B] = if (B.random) Some(T) else None()
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val xOpt: Option[B] = if (B.random) Some(T) else None()
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |assert((if (B.random) Some(T) else None[B]()).nonEmpty)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |assert((if (B.random) Some(T) else None[B]()).nonEmpty)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val xOpt: Option[Z] = Some(4)
-                             |val Some(x) = xOpt
-                             |assert(x > 0)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val xOpt: Option[Z] = Some(4)
+                               |val Some(x) = xOpt
+                               |assert(x > 0)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
-                             |val Poset(_, _, parents, children) = poset
-                             |val parentsTyped: HashMap[Z, HashSet[Z]] = parents
-                             |val childrenTyped: HashMap[Z, HashSet[Z]] = children
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
+                               |val Poset(_, _, parents, children) = poset
+                               |val parentsTyped: HashMap[Z, HashSet[Z]] = parents
+                               |val childrenTyped: HashMap[Z, HashSet[Z]] = children
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
-                             |poset match {
-                             |  case Poset(_, _, parents, _) if parents.nonEmpty =>
-                             |    val psTyped: HashMap[Z, HashSet[Z]] = parents
-                             |  case _ =>
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
+                               |poset match {
+                               |  case Poset(_, _, parents, _) if parents.nonEmpty =>
+                               |    val psTyped: HashMap[Z, HashSet[Z]] = parents
+                               |  case _ =>
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |ISZ(1, 2, 3) match {
-                             | case IS(n1, n2, n3, _*) =>
-                             | case _ => halt("impossible")
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |ISZ(1, 2, 3) match {
+                               | case IS(n1, n2, n3, _*) =>
+                               | case _ => halt("impossible")
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val x: Option[Z] = None()
-                             |x match {
-                             | case Some(_) => halt("impossible")
-                             | case _ =>
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val x: Option[Z] = None()
+                               |x match {
+                               | case Some(_) => halt("impossible")
+                               | case _ =>
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |5 match {
-                             | case z"1" => halt("impossible")
-                             | case 10 => halt("impossible")
-                             | case _ =>
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |5 match {
+                               | case z"1" => halt("impossible")
+                               | case 10 => halt("impossible")
+                               | case _ =>
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |"abc".native match {
-                             | case "abcd" => halt("impossible")
-                             | case _ =>
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |"abc".native match {
+                               | case "abcd" => halt("impossible")
+                               | case _ =>
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |'A' match {
-                             | case c"A" =>
-                             | case _ => halt("impossible")
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |'A' match {
+                               | case c"A" =>
+                               | case _ => halt("impossible")
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
-                             |val upPoset = poset(parents = poset.parents + 3 ~> (HashSet ++ ISZ(1, 2, 3)))
-                             |val upPosetTyped: Poset[String] = upPoset
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
+                               |val upPoset = poset(parents = poset.parents + 3 ~> (HashSet ++ ISZ(1, 2, 3)))
+                               |val upPosetTyped: Poset[String] = upPoset
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
-                             |val upPoset = poset(parents = poset.parents + 3 ~> HashSet.empty[Z])
-                             |val upPosetTyped: Poset[String] = upPoset
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
+                               |val upPoset = poset(parents = poset.parents + 3 ~> HashSet.empty[Z])
+                               |val upPosetTyped: Poset[String] = upPoset
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val a = ISZ(1, 2, 3)
-                             |val first = a(0)
-                             |val firstTyped: Z = first
-                             |val upFirst = a(0 ~> 5)
-                             |val upFirstTyped: ISZ[Z] = upFirst
-                             |val upAll = a(0 ~> 5, 1 ~> 6, 2 ~> 7)
-                             |val upAllTyped: IS[Z, Z] = upAll
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val a = ISZ(1, 2, 3)
+                               |val first = a(0)
+                               |val firstTyped: Z = first
+                               |val upFirst = a(0 ~> 5)
+                               |val upFirstTyped: ISZ[Z] = upFirst
+                               |val upAll = a(0 ~> 5, 1 ~> 6, 2 ~> 7)
+                               |val upAllTyped: IS[Z, Z] = upAll
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val a = ZS(1, 2, 3)
-                             |val first = a(0)
-                             |val firstTyped: Z = first
-                             |val upFirst = a(0 ~> 5)
-                             |val upFirstTyped: ZS = upFirst
-                             |val upAll = a(0 ~> 5, 1 ~> 6, 2 ~> 7)
-                             |val upAllTyped: MS[Z, Z] = upAll
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val a = ZS(1, 2, 3)
+                               |val first = a(0)
+                               |val firstTyped: Z = first
+                               |val upFirst = a(0 ~> 5)
+                               |val upFirstTyped: ZS = upFirst
+                               |val upAll = a(0 ~> 5, 1 ~> 6, 2 ~> 7)
+                               |val upAllTyped: MS[Z, Z] = upAll
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val x: Either[B, Z] = Either.Left(T)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val x: Either[B, Z] = Either.Left(T)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val x: ISZ[Z] = IS[Z, Z](1, 2, 3)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val x: ISZ[Z] = IS[Z, Z](1, 2, 3)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val x: MEither[B, Z] = MEither.Right(value = 5)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val x: MEither[B, Z] = MEither.Right(value = 5)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |println((Map.empty[String, Z] + "A" ~> 1).get(key = "B").getOrElse(default = 0))
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |println((Map.empty[String, Z] + "A" ~> 1).get(key = "B").getOrElse(default = 0))
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |println(Z("0").getOrElse(1))
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |println(Z("0").getOrElse(1))
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val x: Either[B, Z] = Either.Left(T)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val x: Either[B, Z] = Either.Left(T)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |println((Map.empty[String, Z] + "A" ~> 1).get("B").getOrElse(0))
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |println((Map.empty[String, Z] + "A" ~> 1).get("B").getOrElse(0))
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |import org.sireum.F32._
-                             |val x: F32 = f32"0.0"
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |import org.sireum.F32._
+                               |val x: F32 = f32"0.0"
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |var x: Z = 1
-                             |while (x > 0) {
-                             |  println("x is positive")
-                             |  x = 0
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |var x: Z = 1
+                               |while (x > 0) {
+                               |  println("x is positive")
+                               |  x = 0
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val x: Z = 1
-                             |if (x > 0) {
-                             |  println("x is positive")
-                             |}
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val x: Z = 1
+                               |if (x > 0) {
+                               |  println("x is positive")
+                               |}
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |val x: Z = 1
-                             |val y = x + 1
-                             |assert(y > x)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |val x: Z = 1
+                               |val y = x + 1
+                               |assert(y > x)
+                               |""".stripMargin)
 
-        *(passingWorksheet("""import org.sireum._
-                             |assert(3 > 0)
-                             |""".stripMargin))
+        * - passingWorksheet("""import org.sireum._
+                               |assert(3 > 0)
+                               |""".stripMargin)
 
       }
 
       "Stmt" - {
 
-        *(passingStmt("assert(true)"))
+        * - passingStmt("assert(true)")
 
-        *(passingStmt("assume(1 + 3 > 2)"))
+        * - passingStmt("assume(1 + 3 > 2)")
 
-        *(passingStmt("""assert(1 + 3 > 2, "ok")"""))
+        * - passingStmt("""assert(1 + 3 > 2, "ok")""")
 
-        *(passingStmt("""println(1, 2, "a", "b")"""))
+        * - passingStmt("""println(1, 2, "a", "b")""")
 
-        *(passingStmt("""eprintln(1, 2, "a", "b")"""))
+        * - passingStmt("""eprintln(1, 2, "a", "b")""")
 
-        *(passingStmt("""print(1, 2, "a", "b")"""))
+        * - passingStmt("""print(1, 2, "a", "b")""")
 
-        *(passingStmt("""eprint(1, 2, "a", "b")"""))
+        * - passingStmt("""eprint(1, 2, "a", "b")""")
 
-        *(passingStmt("val x: org.sireum.Z = 1"))
+        * - passingStmt("val x: org.sireum.Z = 1")
 
-        *(passingStmt("assert(org.sireum.T)"))
+        * - passingStmt("assert(org.sireum.T)")
 
-        *(passingStmt("assert(!org.sireum.F)"))
+        * - passingStmt("assert(!org.sireum.F)")
 
-        *(passingStmt("""halt("foo")"""))
+        * - passingStmt("""halt("foo")""")
       }
     }
 
@@ -350,62 +350,62 @@ class TypeCheckerTest extends SireumSpec {
 
       "Worksheet" - {
 
-        *(failingWorksheet("""import org.sireum._
-                             |@pure def foo(): Z = { return 4 }
-                             |assert(foo - 4)
-                             |""".stripMargin, "eta"))
+        * - failingWorksheet("""import org.sireum._
+                               |@pure def foo(): Z = { return 4 }
+                               |assert(foo - 4)
+                               |""".stripMargin, "eta")
 
-        *(failingWorksheet("""import org.sireum._
-                             |@pure def foo(x: Z): Z = { return }
-                             |assert(foo(4) > 4)
-                             |""".stripMargin, "none found"))
+        * - failingWorksheet("""import org.sireum._
+                               |@pure def foo(x: Z): Z = { return }
+                               |assert(foo(4) > 4)
+                               |""".stripMargin, "none found")
 
-        *(failingWorksheet("""import org.sireum._
-                             |@pure def foo(x: Z): Unit = { return x + 1 }
-                             |foo(4)
-                             |""".stripMargin, "Expecting type 'org.sireum.Unit'"))
+        * - failingWorksheet("""import org.sireum._
+                               |@pure def foo(x: Z): Unit = { return x + 1 }
+                               |foo(4)
+                               |""".stripMargin, "Expecting type 'org.sireum.Unit'")
 
-        *(failingWorksheet("""import org.sireum._
-                             |val zs = ZS(1, 2, 3).map(x => x + 1)
-                             |""".stripMargin, "Explicit type"))
+        * - failingWorksheet("""import org.sireum._
+                               |val zs = ZS(1, 2, 3).map(x => x + 1)
+                               |""".stripMargin, "Explicit type")
 
-        *(failingWorksheet("""import org.sireum._
-                             |val x: Option[Z] = None()
-                             |x match {
-                             | case Some(_: Z) => halt("impossible")
-                             | case _ =>
-                             |}
-                             |""".stripMargin, "Unnecessary"))
+        * - failingWorksheet("""import org.sireum._
+                               |val x: Option[Z] = None()
+                               |x match {
+                               | case Some(_: Z) => halt("impossible")
+                               | case _ =>
+                               |}
+                               |""".stripMargin, "Unnecessary")
 
-        *(failingWorksheet("""import org.sireum._
-                             |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
-                             |val upPoset = poset(parents = poset.parents + 3 ~> (HashSet.empty ++ ISZ(1, 2, 3)))
-                             |val upPosetTyped: Poset[String] = upPoset
-                             |""".stripMargin, "Explicit type"))
+        * - failingWorksheet("""import org.sireum._
+                               |val poset = Poset[String](HashMap.empty, ISZ(), HashMap.empty, HashMap.empty)
+                               |val upPoset = poset(parents = poset.parents + 3 ~> (HashSet.empty ++ ISZ(1, 2, 3)))
+                               |val upPosetTyped: Poset[String] = upPoset
+                               |""".stripMargin, "Explicit type")
 
-        *(failingWorksheet("""import org.sireum._
-                             |val x: MEither[B, Z] = MEither.Right(value = T)
-                             |""".stripMargin, "but 'org.sireum.B'"))
+        * - failingWorksheet("""import org.sireum._
+                               |val x: MEither[B, Z] = MEither.Right(value = T)
+                               |""".stripMargin, "but 'org.sireum.B'")
 
-        *(failingWorksheet("""import org.sireum._
-                             |val x = Either.Left(T)
-                             |""".stripMargin, "type parameter(s): 'R'"))
+        * - failingWorksheet("""import org.sireum._
+                               |val x = Either.Left(T)
+                               |""".stripMargin, "type parameter(s): 'R'")
 
-        *(failingWorksheet("""import org.sireum._
-                             |println(Z(s = "0").getOrElse(1))
-                             |""".stripMargin, "Could not find parameter 's'"))
+        * - failingWorksheet("""import org.sireum._
+                               |println(Z(s = "0").getOrElse(1))
+                               |""".stripMargin, "Could not find parameter 's'")
 
       }
 
       "Stmt" - {
 
-        *(failingStmt("assert(1)", "but 'org.sireum.Z' found"))
+        * - failingStmt("assert(1)", "but 'org.sireum.Z' found")
 
-        *(failingStmt("""halt(1)""", "but 'org.sireum.Z' found"))
+        * - failingStmt("""halt(1)""", "but 'org.sireum.Z' found")
 
-        *(failingStmt("""println(org.sireum.Map.empty)""", "Explicit type"))
+        * - failingStmt("""println(org.sireum.Map.empty)""", "Explicit type")
 
-        *(failingStmt("""println(org.sireum.Map.empty[org.sireum.Z])""", "Expecting 2 type arg"))
+        * - failingStmt("""println(org.sireum.Map.empty[org.sireum.Z])""", "Expecting 2 type arg")
 
       }
 

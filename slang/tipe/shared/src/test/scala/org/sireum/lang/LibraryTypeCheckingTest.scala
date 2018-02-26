@@ -29,25 +29,23 @@ import org.sireum._
 import org.sireum.message._
 import org.sireum.lang.symbol._
 import org.sireum.lang.tipe._
-import org.sireum.test.SireumSpec
+import org.sireum.test._
 
-class LibraryTypeCheckingTest extends SireumSpec {
+class LibraryTypeCheckingTest extends TestSuite {
 
-  {
+  val tests = Tests {
 
-    implicit val _spec: SireumSpec = this
-
-    * {
+    * - {
       val (tc, rep) = TypeChecker.libraryReporter
       rep.printMessages()
       assert(!rep.hasIssue)
       def nameInfo(th: TypeHierarchy, name: Predef.String): Resolver.NameMap = {
         val ids = ISZ(name.split('.').map(s => s: String): _*)
-        return HashMap ++ ISZ((ids, th.nameMap.get(ids).get))
+        HashMap ++ ISZ((ids, th.nameMap.get(ids).get))
       }
       def typeInfo(th: TypeHierarchy, name: Predef.String): Resolver.TypeMap = {
         val ids = ISZ(name.split('.').map(s => s: String): _*)
-        return HashMap ++ ISZ((ids, th.typeMap.get(ids).get))
+        HashMap ++ ISZ((ids, th.typeMap.get(ids).get))
       }
       val reporter = Reporter.create
       reporter.reports(rep.messages)
@@ -70,8 +68,9 @@ class LibraryTypeCheckingTest extends SireumSpec {
       reporter.printMessages()
       !reporter.hasIssue
     }
+  }
 
-    /*
+  /*
     def collectStats(os: Any*): Unit = {
       final case class Wrapper(o: Any) {
         override def hashCode: Int = o.hashCode
@@ -116,6 +115,5 @@ class LibraryTypeCheckingTest extends SireumSpec {
         println(s"${e._1.o.getClass.getName}: ${e._2}")
       }
     }
-   */
-  }
+ */
 }
