@@ -32,7 +32,9 @@ object $SlangFiles {
   def map: scala.collection.Map[scala.Seq[Predef.String], Predef.String] =
     RC.text({
       val slangRoot = "../../../../../../../.."
-      for (sub <- Seq("ast", "parser", "tipe")) yield s"$slangRoot/$sub/shared/src/main/scala/org/sireum/lang"
+      val slangDirs = for (sub <- Seq("ast", "parser", "tipe")) yield s"$slangRoot/$sub/shared/src/main/scala/org/sireum/lang"
+      val toolsDir = slangRoot + "/../tools/shared/src/main/scala/org/sireum"
+      slangDirs ++ Seq(toolsDir)
     }) { (p, f) =>
       val filename = p.last
       if (filename.endsWith(".scala")) {
