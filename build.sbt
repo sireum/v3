@@ -32,49 +32,88 @@ import sbtassembly.AssemblyPlugin._
 
 val isRelease = System.getenv("SIREUM_RELEASE") != null
 
+lazy val properties = {
+  def findPropFile(): String = {
+    def err(): Nothing = {
+      throw new Error("Need to supply property 'org.sireum.version.file', property 'org.sireum.home', or 'SIREUM_HOME' env var.")
+    }
+    def checkFile(f: File): String = {
+      if (f.isFile && f.canRead) return f.getCanonicalFile.getAbsolutePath
+      err()
+    }
+    val propFile = System.getProperty("org.sireum.version.file")
+    if (propFile == null) {
+      var sireumHome = System.getProperty("org.sireum.home")
+      if (sireumHome != null) {
+        return checkFile(new File(sireumHome, "versions.properties"))
+      }
+      sireumHome = System.getenv("SIREUM_HOME")
+      if (sireumHome != null) {
+        return checkFile(new File(sireumHome, "versions.properties"))
+      }
+      err()
+    } else {
+      checkFile(new File(propFile))
+    }
+  }
+  val propFile = findPropFile()
+  println(s"[info] Loading Sireum dependency versions from $propFile ...")
+  val ps = new _root_.java.util.Properties()
+  IO.load(ps, new File(propFile))
+  ps
+}
+
+def property(key: String): String = {
+  val value = properties.getProperty(key)
+  if (value == null) {
+    throw new Error(s"Need to supply property '$key'.")
+  }
+  value
+}
+
 val sireumVersion = "3"
 
-val scalaVer = "2.12.4"
+lazy val scalaVer = property("org.sireum.version.scala")
 
-val sireumScalacVersion = "3.2.9"
+lazy val sireumScalacVersion = property("org.sireum.version.scalac-plugin")
 
-val metaVersion = "3.2.0"
+lazy val metaVersion = property("org.sireum.version.scalameta")
 
-val scalaTestVersion = "3.0.1"
+lazy val scalaTestVersion = property("org.sireum.version.scalatest")
 
-val scalaJsDomVersion = "0.9.4"
+lazy val scalaJsDomVersion = property("org.sireum.version.scalajsdom")
 
-val scalaJsJQueryVersion = "0.9.2"
+lazy val scalaJsJQueryVersion = property("org.sireum.version.scalajsjquery")
 
-val scalaTagsVersion = "0.6.7"
+lazy val scalaTagsVersion = property("org.sireum.version.scalatags")
 
-val asmVersion = "6.0"
+lazy val asmVersion = property("org.sireum.version.asm")
 
-val jgraphtVersion = "1.1.0"
+lazy val jgraphtVersion = property("org.sireum.version.jgrapht")
 
-val upickleVersion = "0.5.1"
+lazy val upickleVersion = property("org.sireum.version.upickle")
 
-val java8CompatVersion = "0.8.0"
+lazy val java8CompatVersion = property("org.sireum.version.java8compat")
 
-val antlrRuntimeVersion = "4.7.1"
+lazy val antlrRuntimeVersion = property("org.sireum.version.antlr")
 
-val stVersion = "4.0.8"
+lazy val stVersion = property("org.sireum.version.stringtemplate")
 
-val ammoniteOpsVersion = "1.0.3"
+lazy val ammoniteOpsVersion = property("org.sireum.version.ammonite-ops")
 
-val diffVersion = "1.1.11"
+lazy val diffVersion = property("org.sireum.version.diff")
 
-val snakeYamlVersion = "1.19"
+lazy val snakeYamlVersion = property("org.sireum.version.snakeyaml")
 
-val junitInterfaceVersion = "0.11"
+lazy val junitInterfaceVersion = property("org.sireum.version.junit-interface")
 
-val utestVersion = "0.6.3"
+lazy val utestVersion = property("org.sireum.version.utest")
 
-val spireVersion = "0.13.0"
+lazy val spireVersion = property("org.sireum.version.spire")
 
-val scalajsonVersion = "1.0.0-M4"
+lazy val scalajsonVersion = property("org.sireum.version.scalajson")
 
-val nuprocessVersion = "1.1.3"
+lazy val nuprocessVersion = property("org.sireum.version.nuprocess")
 
 val BUILD_FILENAME = "BUILD"
 
@@ -287,9 +326,7 @@ lazy val slangAstJs = slangAstT._3
 lazy val slangParserPI = new ProjectInfo("slang/parser", isCross = true, macrosPI, libraryPI, slangAstPI)
 lazy val slangParserT = toSbtCrossProject(
   slangParserPI,
-  slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalameta" %%% "scalameta" % metaVersion)
-  )
+  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalameta" %%% "scalameta" % metaVersion))
 )
 lazy val slangParserShared = slangParserT._1
 lazy val slangParserJvm = slangParserT._2
@@ -298,9 +335,7 @@ lazy val slangParserJs = slangParserT._3
 lazy val slangTipePI = new ProjectInfo("slang/tipe", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI)
 lazy val slangTipeT = toSbtCrossProject(
   slangTipePI,
-  slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test")
-  )
+  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
 )
 lazy val slangTipeShared = slangTipeT._1
 lazy val slangTipeJvm = slangTipeT._2
@@ -309,9 +344,7 @@ lazy val slangTipeJs = slangTipeT._3
 lazy val toolsPI = new ProjectInfo("tools", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI, slangTipePI)
 lazy val toolsT = toSbtCrossProject(
   toolsPI,
-  slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test")
-  )
+  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
 )
 lazy val toolsShared = toolsT._1
 lazy val toolsJvm = toolsT._2
@@ -326,9 +359,7 @@ lazy val commonJs = commonT._3.settings(webSettings: _*)
 lazy val webPI = new ProjectInfo("web", isCross = true, macrosPI, libraryPI, utilPI, commonPI)
 lazy val webT = toSbtCrossProject(
   webPI,
-  slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test")
-  )
+  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
 )
 lazy val webShared = webT._1
 lazy val webJvm = webT._2
@@ -337,9 +368,7 @@ lazy val webJs = webT._3.settings(webSettings: _*)
 lazy val skemaPI = new ProjectInfo("aadl/skema", isCross = true, utilPI, testPI, macrosPI, libraryPI)
 lazy val skemaT = toSbtCrossProject(
   skemaPI,
-  slangSettings ++ Seq(
-    libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test")
-  )
+  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
 )
 lazy val skemaShared = skemaT._1
 lazy val skemaJvm = skemaT._2
@@ -426,7 +455,9 @@ lazy val sireumJvm =
           assembly / logLevel := Level.Error,
           assemblyExcludedJars in assembly := {
             val cp = (fullClasspath in assembly).value
-            cp filter {x => x.data.getName.contains("scalapb") || x.data.getName.contains("protobuf")}
+            cp filter { x =>
+              x.data.getName.contains("scalapb") || x.data.getName.contains("protobuf")
+            }
           },
           assemblyShadeRules in assembly := Seq(
             ShadeRule.rename("com.**" -> "sh4d3.com.@1").inAll,
