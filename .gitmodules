@@ -4,3 +4,9 @@
 [submodule "distros/wsd.js"]
 	path = resources/distro/wsd.js
 	url = https://github.com/sireum/v3-wsd.js
+[submodule "slang"]
+	path = slang
+	url = https://github.com/sireum/slang.git
+[submodule "tools"]
+	path = tools
+	url = https://github.com/sireum/tools.git
