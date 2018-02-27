@@ -28,7 +28,13 @@ package org.sireum.tools
 import java.io.File
 
 object Paths {
-  val rootDir: File = new File(getClass.getResource(".").getPath, "../../../../../../../../").getCanonicalFile
+  val rootDir: File = {
+    var f = new File(getClass.getResource(".").getPath, "../../..").getCanonicalFile.getAbsoluteFile
+    while (!(f.getName == "tools" && f.getParentFile.getName != "out")) {
+      f = f.getParentFile
+    }
+    f.getParentFile.getCanonicalFile
+  }
 
   val licensePath = new File(rootDir, "license.txt")
 
