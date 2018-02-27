@@ -1,6 +1,6 @@
 [submodule "runtime"]
 	path = runtime
-	url = https://github.com/sireum/v3-runtime
+	url = https://github.com/sireum/runtime
 [submodule "distros/wsd.js"]
 	path = resources/distro/wsd.js
 	url = https://github.com/sireum/v3-wsd.js
