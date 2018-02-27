@@ -27,7 +27,6 @@ import $file.runtime.Runtime
 import $file.slang.Slang
 import $file.Tools
 import ammonite.ops.up
-import SireumModule._
 
 object runtime extends mill.Module {
 

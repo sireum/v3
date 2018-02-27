@@ -23,9 +23,9 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import SireumModule._
 import mill._
 import mill.scalalib._
+import org.sireum.mill.SireumModule._
 
 trait Module extends CrossJvmJs {
 
