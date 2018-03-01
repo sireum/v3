@@ -87,6 +87,8 @@ lazy val scalaJsJQueryVersion = property("org.sireum.version.scalajsjquery")
 
 lazy val scalaTagsVersion = property("org.sireum.version.scalatags")
 
+lazy val parboiled2Version = property("org.sireum.version.parboiled2")
+
 lazy val asmVersion = property("org.sireum.version.asm")
 
 lazy val jgraphtVersion = property("org.sireum.version.jgrapht")
@@ -383,10 +385,15 @@ lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI
 lazy val cli = toSbtJvmProject(cliPI, sireumJvmSettings ++ commonSlangSettings)
 
 lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, commonPI, skemaPI)
-lazy val awasT = toSbtCrossProject(awasPI, Seq(Test / parallelExecution := false))
+lazy val awasT = toSbtCrossProject(awasPI, Seq(
+  Test / parallelExecution := false,
+  libraryDependencies ++= Seq(
+    "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
+    "org.parboiled" %% "parboiled" % parboiled2Version
+  )))
 
 lazy val awasShared = awasT._1
-lazy val awasJvm = awasT._2.settings(libraryDependencies ++= Seq("com.lihaoyi" %%% "scalatags" % scalaTagsVersion))
+lazy val awasJvm = awasT._2
 lazy val awasJs = awasT._3.settings(webSettings: _*)
 
 lazy val arsitPI =
