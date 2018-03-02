@@ -34,6 +34,7 @@ import _root_.java.nio.file._
 import _root_.java.nio.charset._
 
 import ammonite.ops._
+import org.sireum.lang.FrontEnd
 import org.sireum.lang.ast.TopUnit
 import org.sireum.lang.parser.Parser
 
@@ -218,10 +219,10 @@ object SlangTipe {
         }
 
         val (thl, rep) = if (o.outline) {
-          val p = TypeChecker.libraryReporter
+          val p = FrontEnd.libraryReporter
           (p._1.typeHierarchy, p._2)
         } else {
-          val p = TypeChecker.checkedLibraryReporter
+          val p = FrontEnd.checkedLibraryReporter
           (p._1.typeHierarchy, p._2)
         }
         if (rep.hasIssue) {
@@ -240,7 +241,7 @@ object SlangTipe {
       startTime()
     }
 
-    val t = Resolver.parseProgramAndGloballyResolve(sources, th.nameMap, th.typeMap)
+    val t = FrontEnd.parseProgramAndGloballyResolve(sources, th.nameMap, th.typeMap)
     if (t._1.hasIssue) {
       t._1.printMessages()
       return InvalidSources
@@ -395,7 +396,7 @@ object SlangTipe {
 
       Parser.parseTopUnit(slangFile._2._2, F, T, F, slangFile._2._1, reporter) match {
         case Some(p: TopUnit.Program) =>
-          val p2 = TypeChecker.checkWorksheet(thOpt, p, reporter)
+          val p2 = FrontEnd.checkWorksheet(thOpt, p, reporter)
           if (reporter.hasIssue) {
             reporter.printMessages()
             return InvalidSlangFiles

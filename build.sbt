@@ -334,16 +334,22 @@ lazy val slangParserShared = slangParserT._1
 lazy val slangParserJvm = slangParserT._2
 lazy val slangParserJs = slangParserT._3
 
-lazy val slangTipePI = new ProjectInfo("slang/tipe", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI)
-lazy val slangTipeT = toSbtCrossProject(
-  slangTipePI,
-  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
-)
+lazy val slangTipePI = new ProjectInfo("slang/tipe", isCross = true, macrosPI, libraryPI, slangAstPI)
+lazy val slangTipeT = toSbtCrossProject(slangTipePI, slangSettings)
 lazy val slangTipeShared = slangTipeT._1
 lazy val slangTipeJvm = slangTipeT._2
 lazy val slangTipeJs = slangTipeT._3
 
-lazy val toolsPI = new ProjectInfo("tools", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI, slangTipePI)
+lazy val slangFrontEndPI = new ProjectInfo("slang/frontend", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI, slangTipePI)
+lazy val slangFrontEndT = toSbtCrossProject(
+  slangFrontEndPI,
+  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
+)
+lazy val slangFrontEndShared = slangFrontEndT._1
+lazy val slangFrontEndJvm = slangFrontEndT._2
+lazy val slangFrontEndJs = slangFrontEndT._3
+
+lazy val toolsPI = new ProjectInfo("tools", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI, slangTipePI, slangFrontEndPI)
 lazy val toolsT = toSbtCrossProject(
   toolsPI,
   slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
@@ -413,6 +419,7 @@ lazy val subProjectsJvm = Seq(
   slangAstJvm,
   slangParserJvm,
   slangTipeJvm,
+  slangFrontEndJvm,
   toolsJvm,
   java,
   cli,
@@ -434,6 +441,7 @@ lazy val subProjectsJs = Seq(
   slangAstJs,
   slangParserJs,
   slangTipeJs,
+  slangFrontEndJs,
   toolsJs,
   commonJs,
   awasJs,
