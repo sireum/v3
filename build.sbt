@@ -570,7 +570,7 @@ lazy val sireum = Project(id = "sireum", base = file("."))
         val runtimeFile =
           Path(new File(rootDir, "runtime/library/shared/src/main/scala/org/sireum/Library_Ext.scala").getCanonicalFile)
         val slangFile =
-          Path(new File(rootDir, "slang/tipe/shared/src/main/scala/org/sireum/lang/$SlangFiles.scala").getCanonicalFile)
+          Path(new File(rootDir, "slang/frontend/shared/src/main/scala/org/sireum/lang/$SlangFiles.scala").getCanonicalFile)
 
         def touche(p: Path): Unit = {
           val text = read ! p
