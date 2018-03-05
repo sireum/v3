@@ -194,7 +194,7 @@ object SlangTipe {
         val data: ISZ[U8] = if (o.gzip) {
           val gis = new GZIPInputStream(new FileInputStream(loadFile))
           try {
-            toIS(gis.readAllBytes())
+            toIS(gis.bytes)
           } catch {
             case e: IOException =>
               eprintln(s"Could not load file: ${e.getMessage}")
@@ -442,5 +442,20 @@ object SlangTipe {
 
   def fromIS(data: ISZ[U8]): (Array[Byte], Int) = {
     return (data.data.asInstanceOf[Array[Byte]], data.size.toInt)
+  }
+
+
+  implicit class GZIS(val gzis: GZIPInputStream) extends AnyVal {
+    def bytes: Array[Byte] = {
+      val bos = new ByteArrayOutputStream
+      val buffer = new Array[Byte](16384)
+      var n = gzis.read(buffer)
+      while (n > -1) {
+        bos.write(buffer, 0, n)
+        n = gzis.read(buffer)
+      }
+      gzis.close()
+      bos.toByteArray
+    }
   }
 }
