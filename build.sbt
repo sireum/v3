@@ -113,8 +113,6 @@ lazy val utestVersion = property("org.sireum.version.utest")
 
 lazy val spireVersion = property("org.sireum.version.spire")
 
-lazy val scalajsonVersion = property("org.sireum.version.scalajson")
-
 lazy val nuprocessVersion = property("org.sireum.version.nuprocess")
 
 val BUILD_FILENAME = "BUILD"
@@ -309,7 +307,6 @@ lazy val libraryT = toSbtCrossProject(
   slangSettings ++ Seq(
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
     libraryDependencies ++= Seq(
-      "org.scala-lang.platform" %%% "scalajson" % scalajsonVersion,
       "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
       "org.spire-math" %%% "spire" % spireVersion % "test"
     )
@@ -483,7 +480,6 @@ lazy val sireumJvm =
             ShadeRule.rename("scala.meta.**" -> "sh4d3.scala.meta.@1").inAll,
             ShadeRule.rename("scalapb.**" -> "sh4d3.scalapb.@1").inAll,
             ShadeRule.rename("upickle.**" -> "sh4d3.upickle.@1").inAll,
-            ShadeRule.rename("scalajson.**" -> "sh4d3.scalajson.@1").inAll,
             ShadeRule.rename("sbt.**" -> "sh4d3.sbt.@1").inAll,
             ShadeRule.rename("org.yaml.**" -> "sh4d3.org.yaml.@1").inAll,
             ShadeRule.rename("org.stringtemplate.**" -> "sh4d3.org.stringtemplate.@1").inAll,
