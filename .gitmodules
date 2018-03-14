@@ -10,3 +10,9 @@
 [submodule "tools"]
 	path = tools
 	url = https://github.com/sireum/tools.git
+[submodule "util"]
+	path = util
+	url = https://github.com/sireum/v3-util
+[submodule "logika"]
+	path = logika
+	url = https://github.com/sireum/v3-logika
