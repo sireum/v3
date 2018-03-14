@@ -370,14 +370,14 @@ lazy val webShared = webT._1
 lazy val webJvm = webT._2
 lazy val webJs = webT._3.settings(webSettings: _*)
 
-lazy val skemaPI = new ProjectInfo("aadl/skema", isCross = true, utilPI, testPI, macrosPI, libraryPI)
-lazy val skemaT = toSbtCrossProject(
-  skemaPI,
+lazy val airPI = new ProjectInfo("aadl/ir", isCross = true, utilPI, testPI, macrosPI, libraryPI)
+lazy val airT = toSbtCrossProject(
+  airPI,
   slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
 )
-lazy val skemaShared = skemaT._1
-lazy val skemaJvm = skemaT._2
-lazy val skemaJs = skemaT._3
+lazy val airShared = airT._1
+lazy val airJvm = airT._2
+lazy val airJs = airT._3
 
 // Jvm Projects
 
@@ -387,7 +387,7 @@ lazy val java = toSbtJvmProject(javaPI)
 lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI, toolsPI)
 lazy val cli = toSbtJvmProject(cliPI, sireumJvmSettings ++ commonSlangSettings)
 
-lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, commonPI, skemaPI)
+lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, commonPI, airPI)
 lazy val awasT = toSbtCrossProject(awasPI, Seq(
   Test / parallelExecution := false,
   libraryDependencies ++= Seq(
@@ -400,10 +400,10 @@ lazy val awasJvm = awasT._2
 lazy val awasJs = awasT._3.settings(webSettings: _*)
 
 lazy val arsitPI =
-  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, commonPI, macrosPI, libraryPI, skemaPI)
+  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, commonPI, macrosPI, libraryPI, airPI)
 lazy val arsit = toSbtJvmProject(arsitPI, slangSettings)
 
-lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, macrosPI, libraryPI, skemaPI)
+lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, macrosPI, libraryPI, airPI)
 lazy val minix = toSbtJvmProject(minixPI, slangSettings)
 
 lazy val subProjectsJvm = Seq(
@@ -421,7 +421,7 @@ lazy val subProjectsJvm = Seq(
   java,
   cli,
   awasJvm,
-  skemaJvm,
+  airJvm,
   arsit,
   minix
 )
@@ -442,7 +442,7 @@ lazy val subProjectsJs = Seq(
   toolsJs,
   commonJs,
   awasJs,
-  skemaJs
+  airJs
 )
 
 lazy val subProjectJvmReferences =
