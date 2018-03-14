@@ -261,7 +261,7 @@ lazy val utilPI = new ProjectInfo("util", isCross = true)
 lazy val utilT = toSbtCrossProject(utilPI)
 lazy val utilShared = utilT._1
 lazy val utilJvm = utilT._2
-lazy val utilJs = utilT._3
+lazy val utilJs = utilT._3.settings(webSettings: _*)
 
 lazy val testPI = new ProjectInfo("test", isCross = true, utilPI)
 lazy val testT = toSbtCrossProject(testPI)
@@ -355,13 +355,7 @@ lazy val toolsShared = toolsT._1
 lazy val toolsJvm = toolsT._2
 lazy val toolsJs = toolsT._3
 
-lazy val commonPI = new ProjectInfo("common", isCross = true, utilPI)
-lazy val commonT = toSbtCrossProject(commonPI)
-lazy val commonShared = commonT._1
-lazy val commonJvm = commonT._2
-lazy val commonJs = commonT._3.settings(webSettings: _*)
-
-lazy val webPI = new ProjectInfo("web", isCross = true, macrosPI, libraryPI, utilPI, commonPI)
+lazy val webPI = new ProjectInfo("web", isCross = true, macrosPI, libraryPI, utilPI)
 lazy val webT = toSbtCrossProject(
   webPI,
   slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
@@ -387,7 +381,7 @@ lazy val java = toSbtJvmProject(javaPI)
 lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI, toolsPI)
 lazy val cli = toSbtJvmProject(cliPI, sireumJvmSettings ++ commonSlangSettings)
 
-lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, commonPI, airPI)
+lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, airPI)
 lazy val awasT = toSbtCrossProject(awasPI, Seq(
   Test / parallelExecution := false,
   libraryDependencies ++= Seq(
@@ -400,7 +394,7 @@ lazy val awasJvm = awasT._2
 lazy val awasJs = awasT._3.settings(webSettings: _*)
 
 lazy val arsitPI =
-  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, commonPI, macrosPI, libraryPI, airPI)
+  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, macrosPI, libraryPI, airPI)
 lazy val arsit = toSbtJvmProject(arsitPI, slangSettings)
 
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, macrosPI, libraryPI, airPI)
@@ -440,7 +434,6 @@ lazy val subProjectsJs = Seq(
   slangTipeJs,
   slangFrontEndJs,
   toolsJs,
-  commonJs,
   awasJs,
   airJs
 )
