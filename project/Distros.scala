@@ -76,7 +76,9 @@ object Distros {
             "latex" -> 18476,
             "antlr" -> 34128,
             "scalafmt" -> 41928,
-            "jbsdk" -> 32949
+            "jbsdk" -> 32949,
+            "gitextender" -> 41256,
+            "gittoolbox" -> 43506
           )
         else Map())
 
