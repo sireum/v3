@@ -30,7 +30,7 @@ done
 ZULU_VERSION=9.0.4.1-jdk9.0.4
 SCALA_VERSION=2.12.4
 SBT_VERSION=1.1.1
-NODE_VERSION=9.6.1
+NODE_VERSION=9.8.0
 Z3_VERSION=4.6.0
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
