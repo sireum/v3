@@ -14,5 +14,7 @@ install:
   - bin/prelude.sh
 
 script:
+  - unset JVM_OPTS
+  - unset SBT_OPTS
   - bin/sbt-launch.sh clean test:compile test:fastOptJS
   - bin/sbt-launch.sh 'project sireum-jvm' test
