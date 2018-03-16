@@ -36,7 +36,7 @@ if [ ! -x ${JAVA} ] || [ ! -f ${SBT_JAR} ] || [ ! -d ${NODE_BIN} ] || [ ! -x ${Z
   exit 1
 fi
 PATH=${NODE_BIN}:${PATH}
-if [[ -z JVM_OPTS ]]; then
+if [[ -z $JVM_OPTS ]]; then
   export JVM_OPTS="-Xmx4G -XX:+UseG1GC -XX:ReservedCodeCacheSize=1G -Xss4m"
 fi
 cd ${SIREUM_HOME}
