@@ -23,12 +23,7 @@ environment:
   PATH: 'C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%'
 
 cache:
-  - platform -> bin\prelude.sh
-  - apps -> bin\prelude.sh
   - '%USERPROFILE%\.coursier'
-  - '%USERPROFILE%\.sbt'
-  - '%USERPROFILE%\.ivy2\cache'
-  - '%USERPROFILE%\.m2'
   - '%LOCALAPPDATA%\Coursier\cache'
 
 install:
