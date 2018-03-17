@@ -23,8 +23,11 @@ environment:
   PATH: 'C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%'
 
 cache:
-  - '%USERPROFILE%\.coursier'
-  - '%LOCALAPPDATA%\Coursier\cache'
+  - project/build.properties -> '%USERPROFILE%\.sbt'
+  - versions.properties -> '%USERPROFILE%\.coursier'
+  - versions.properties -> '%LOCALAPPDATA%\Coursier\cache'
+  - platform -> bin\prelude.sh
+  - apps -> bin\prelude.sh
 
 install:
   - bash -lc "pacman --noconfirm -S unzip bc"
