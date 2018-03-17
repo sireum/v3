@@ -10,6 +10,8 @@ build:
     pull: true
     options: "-e HOME=/root"
   ci:
+    - if git show -s HEAD | grep -F -q "[skip shippable]" ; then echo "skip shippable" && return 0 ; fi
+    - if git show -s HEAD | grep -F -q "[shippable skip]" ; then echo "shippable skip" && return 0 ; fi
     - git submodule update --init --recursive
     - bin/sbt-launch.sh clean test:compile test:fastOptJS
     - bin/sbt-launch.sh 'project sireum-jvm' test

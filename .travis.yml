@@ -14,6 +14,8 @@ install:
   - bin/prelude.sh
 
 script:
+  - if echo "$TRAVIS_COMMIT_MESSAGE" | grep -F -q "[skip travis]" ; then echo "skip travis" && exit 0 ; fi
+  - if echo "$TRAVIS_COMMIT_MESSAGE" | grep -F -q "[travis skip]" ; then echo "travis skip" && exit 0 ; fi
   - unset JVM_OPTS
   - unset SBT_OPTS
   - bin/sbt-launch.sh clean test:compile test:fastOptJS
