@@ -63,7 +63,7 @@ object Distros {
     "sireum" -> (if (isDev) 0 else 42206),
     "sireum-injector" -> (if (isDev) 0 else 42207),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 42173 else 41523),
+    "scala" -> (if (isDev) 44173 else 41523),
     "markdown" -> (if (isDev) 42241 else 39197),
     "asm" -> 41973,
     "bash" -> (if (isDev) 43928 else 38798),
