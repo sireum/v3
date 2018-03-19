@@ -23,9 +23,9 @@ environment:
   PATH: 'C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%'
 
 cache:
-  - project/build.properties -> '%USERPROFILE%\.sbt'
-  - versions.properties -> '%USERPROFILE%\.coursier'
-  - versions.properties -> '%LOCALAPPDATA%\Coursier\cache'
+  - '%USERPROFILE%\.sbt' -> project/build.properties
+  - '%USERPROFILE%\.coursier' -> versions.properties
+  - '%LOCALAPPDATA%\Coursier\cache' -> versions.properties
   - platform -> bin\prelude.sh
   - apps -> bin\prelude.sh
 
