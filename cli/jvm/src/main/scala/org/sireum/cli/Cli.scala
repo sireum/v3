@@ -132,8 +132,8 @@ import Cli._
             |(c) 2018, SAnToS Laboratory, Kansas State University
             |
             |Available modes:
-            |logika                   Logika Verifier and Proof Checker
-            |tools                    tools""".render
+            |logika                   Logika verifier and proof checker
+            |tools                    Utility tools""".render
       )
       return Some(HelpOption())
     }
@@ -292,7 +292,7 @@ import Cli._
   def parseTools(args: ISZ[String], i: Z): Option[SireumOption] = {
     if (i >= args.size) {
       println(
-        st"""Sireum Tools
+        st"""Sireum Utility Tools
             |
             |Available modes:
             |cligen                   Command-line interface (CLI) generator
@@ -620,7 +620,7 @@ import Cli._
         st"""Sireum AADL Tools
             |
             |Available modes:
-            |arsit                    Generate Slang-Embedded project from AadlXml
+            |arsit                    Generate Slang project from Aadl IR
             |awas                     Generate Awas from AADL model""".render
       )
       return Some(HelpOption())
@@ -635,7 +635,7 @@ import Cli._
 
   def parseArsit(args: ISZ[String], i: Z): Option[SireumOption] = {
     val help =
-      st"""Slang-Embedded generator
+      st"""Slang Generator
           |
           |Usage: <option>*
           |

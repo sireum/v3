@@ -29,7 +29,7 @@
   val logikaTool: Tool = Tool(
     name = "logika",
     command = "logika",
-    description = "Logika Verifier and Proof Checker",
+    description = "Logika verifier and proof checker",
     header =
       st"""Sireum/Logika:
           |A Program Verifier and A Natural Deduction Proof Checker
@@ -78,8 +78,8 @@
   val arsitTool: Tool = Tool(
     name = "arsit",
     command = "arsit",
-    description = "Generate Slang-Embedded project from AadlXml",
-    header = "Slang-Embedded generator",
+    description = "Generate Slang project from Aadl IR",
+    header = "Slang Generator",
     usage = "<option>*",
     opts = ISZ(
       Opt(name = "json", longKey = "json", shortKey = Some('j'),
