@@ -24,7 +24,7 @@
  */ {
 
   import org.sireum._
-  import org.sireum.tools.CliGen.CliOpt._
+  import org.sireum.cli.CliOpt._
 
   val logikaTool: Tool = Tool(
     name = "logika",
@@ -75,75 +75,6 @@
     )
   )
 
-  val cliGenTool: Tool = Tool(
-    name = "cligen",
-    command = "cligen",
-    description = "Command-line interface (CLI) generator",
-    header = "Sireum CLI Generator",
-    usage = "<option>* <config-file>",
-    opts = ISZ(
-      Opt(name = "packageName", longKey = "package", shortKey = Some('p'),
-        tpe = Type.Str(sep = Some('.'), default = Some("cli")),
-        description = "Package name for the CLI processor"),
-      Opt(name = "name", longKey = "name", shortKey = Some('n'),
-        tpe = Type.Str(sep = None(), default = Some("Cli")),
-        description = "Type simple name for the CLI @record class processor"),
-      Opt(name = "width", longKey = "width", shortKey = Some('w'),
-        tpe = Type.Num(sep = Some(','), default = 0, min = Some(0), max = None()),
-        description = "First (key) column (default: 25) and second column (default: 55) max width"),
-      Opt(name = "license", longKey = "license", shortKey = Some('l'),
-        tpe = Type.Path(multiple = F, default = None()), description = "License file to be inserted in the file header"),
-      Opt(name = "outputDir", longKey = "output-dir", shortKey = Some('o'),
-        tpe = Type.Path(multiple = F, default = Some(".")), description = "Output directory for the generated CLI Slang file")
-    ),
-    groups = ISZ()
-  )
-
-  val transformerGenTool: Tool = Tool(
-    name = "transgen",
-    command = "transgen",
-    description = "Transformer (visitor/rewriter) generator",
-    header = "Sireum Transformer Generator",
-    usage = "<option>* <slang-file>",
-    opts = ISZ(
-      Opt(name = "modes", longKey = "modes", shortKey = Some('m'),
-        tpe = Type.Choice(name = "TransformerMode", sep = Some(','), ISZ("immutable", "mutable")),
-        description = "Transformer mode"),
-      Opt(name = "name", longKey = "name", shortKey = Some('n'),
-        tpe = Type.Str(sep = None(), default = None()),
-        description = "Type simple name for the transformers (default: \"Transformer\" or \"MTransformer\")"),
-      Opt(name = "license", longKey = "license", shortKey = Some('l'),
-        tpe = Type.Path(multiple = F, default = None()), description = "License file to be inserted in the file header"),
-      Opt(name = "outputDir", longKey = "output-dir", shortKey = Some('o'),
-        tpe = Type.Path(multiple = F, default = Some(".")), description = "Output directory for the generated transformer Slang files")
-    ),
-    groups = ISZ()
-  )
-
-  val serializerGenTool: Tool = Tool(
-    name = "sergen",
-    command = "sergen",
-    description = "De/Serializer generator",
-    header = "Sireum De/Serializer Generator",
-    usage = "<option>* <slang-file>",
-    opts = ISZ(
-      Opt(name = "modes", longKey = "modes", shortKey = Some('m'),
-        tpe = Type.Choice(name = "SerializerMode", sep = Some(','), ISZ("json", "msgpack")),
-        description = "De/serializer mode"),
-      Opt(name = "packageName", longKey = "package", shortKey = Some('p'),
-        tpe = Type.Str(sep = Some('.'), default = None()),
-        description = "Type simple name for the de/serializers (default: \"Json\" or \"MsgPack\")"),
-      Opt(name = "name", longKey = "name", shortKey = Some('n'),
-        tpe = Type.Str(sep = None(), default = None()),
-        description = "Type simple name for the de/serializers (default: \"Json\" or \"MsgPack\")"),
-      Opt(name = "license", longKey = "license", shortKey = Some('l'),
-        tpe = Type.Path(multiple = F, default = None()), description = "License file to be inserted in the file header"),
-      Opt(name = "outputDir", longKey = "output-dir", shortKey = Some('o'),
-        tpe = Type.Path(multiple = F, default = Some(".")), description = "Output directory for the generated de/serializer Slang files")
-    ),
-    groups = ISZ()
-  )
-
   val arsitTool: Tool = Tool(
     name = "arsit",
     command = "arsit",
@@ -179,56 +110,12 @@
     subs = ISZ(arsitTool, awasTool)
   )
 
-  val utilGroup: Group = Group(
-    name = "util",
-    description = "Utility Tools",
-    header = "Sireum Utility Tools",
-    unlisted = F,
-    subs = ISZ(cliGenTool, serializerGenTool, transformerGenTool)
-  )
-
-  val langTipe: Tool = Tool(
-    name = "slangTipe",
-    command = "tipe",
-    description = "Slang type checker",
-    header = "Slang Type Checker",
-    usage = "<option>* [<slang-file>]",
-    opts = ISZ(
-      Opt(name = "sourcepath", longKey = "sourcepath", shortKey = Some('s'),
-        tpe = Type.Path(T, None()),
-        description = "Sourcepath of Slang .scala files"),
-      Opt(name = "outline", longKey = "outline", shortKey = Some('o'),
-        tpe = Type.Flag(F), description = "Perform type outlining only for files in the sourcepath"),
-      Opt(name = "force", longKey = "force", shortKey = Some('f'),
-        tpe = Type.Str(Some(','), None()),
-        description = "Fully qualified names of traits, classes, and objects to force full type checking on when type outlining is enabled"),
-      Opt(name = "verbose", longKey = "verbose", shortKey = None(),
-        tpe = Type.Flag(F), description = "Enable verbose mode")
-    ),
-    groups = ISZ(OptGroup(name = "Persistence", opts = ISZ(
-      Opt(name = "save", longKey = "save", shortKey = None(), tpe = Type.Path(F, None()),
-        description = "Path to save type information to (outline should not be enabled)"),
-      Opt(name = "load", longKey = "load", shortKey = None(), tpe = Type.Path(F, None()),
-        description = "Path to load type information from"),
-      Opt(name = "gzip", longKey = "no-gzip", shortKey = Some('z'), tpe = Type.Flag(T),
-        description = "Disable gzip compression when saving and/or loading")
-    )))
-  )
-
-  val slangGroup: Group = Group(
-    name = "slang",
-    description = "Slang toolbox",
-    header = "The Sireum Language (Slang) Toolbox",
-    unlisted = F,
-    subs = ISZ(langTipe)
-  )
-
   val xGroup: Group = Group(
     name = "x",
     description = "Experimental Tools",
     header = "Sireum Experimental Tools",
     unlisted = T,
-    subs = ISZ(aadlGroup, slangGroup)
+    subs = ISZ(aadlGroup, org.sireum.lang.cli.group)
   )
   val mainGroup: Group = Group(
     name = "sireum",
@@ -237,7 +124,7 @@
       st"""Sireum: A Software Analysis Platform (v3)
           |(c) 2018, SAnToS Laboratory, Kansas State University""".render,
     unlisted = F,
-    subs = ISZ(logikaTool, utilGroup, xGroup)
+    subs = ISZ(logikaTool, org.sireum.tools.cli.group, xGroup)
   )
 
   mainGroup

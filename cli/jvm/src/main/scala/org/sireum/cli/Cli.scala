@@ -133,14 +133,14 @@ import Cli._
             |
             |Available modes:
             |logika                   Logika Verifier and Proof Checker
-            |util                     Utility Tools""".render
+            |tools                    tools""".render
       )
       return Some(HelpOption())
     }
-    val opt = select("sireum", args, i, ISZ("logika", "util", "x"))
+    val opt = select("sireum", args, i, ISZ("logika", "tools", "x"))
     opt match {
       case Some(string"logika") => parseLogika(args, i + 1)
-      case Some(string"util") => parseUtil(args, i + 1)
+      case Some(string"tools") => parseTools(args, i + 1)
       case Some(string"x") => parseX(args, i + 1)
       case _ => return None()
     }
@@ -289,10 +289,10 @@ import Cli._
     return Some(LogikaOption(help, parseArguments(args, j), formula, server, auto, bitwidth, c, compare, last, run, sat, symexe, timeout, ascii, unicode))
   }
 
-  def parseUtil(args: ISZ[String], i: Z): Option[SireumOption] = {
+  def parseTools(args: ISZ[String], i: Z): Option[SireumOption] = {
     if (i >= args.size) {
       println(
-        st"""Sireum Utility Tools
+        st"""Sireum Tools
             |
             |Available modes:
             |cligen                   Command-line interface (CLI) generator
@@ -301,7 +301,7 @@ import Cli._
       )
       return Some(HelpOption())
     }
-    val opt = select("util", args, i, ISZ("cligen", "sergen", "transgen"))
+    val opt = select("tools", args, i, ISZ("cligen", "sergen", "transgen"))
     opt match {
       case Some(string"cligen") => parseCligen(args, i + 1)
       case Some(string"sergen") => parseSergen(args, i + 1)
