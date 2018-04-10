@@ -154,6 +154,7 @@ lazy val sireumSettings = Seq(
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
   resolvers += Resolver.sonatypeRepo("public"),
+  dependencyUpdatesFilter -= moduleFilter(organization = "com.lihaoyi", name = "upickle"),
   dependencyUpdatesFilter -= moduleFilter(organization = "org.scalatest"),
   dependencyUpdatesFilter -= moduleFilter(organization = "org.eclipse.jetty")
 )
