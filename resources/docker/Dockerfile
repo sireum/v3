@@ -1,4 +1,4 @@
-FROM ubuntu:17.10
+FROM ubuntu:18.04
 MAINTAINER Robby <robby@santoslab.org>
 ENV SIREUM_HOME=/opt/sireum-v3 \
     JAVA_HOME=/opt/sireum-v3/platform/java \
@@ -22,7 +22,7 @@ RUN dpkg --add-architecture i386 && \
     cat ~/.profile >> ~/.bashrc && \
     rm ~/.profile && \
     /opt/local/bin/opam repo add coq-released https://coq.inria.fr/opam/released && \
-    /opt/local/bin/opam pin add -n coq 8.6.1 && \
+    /opt/local/bin/opam pin add -n coq 8.7.1 && \
     /opt/local/bin/opam install --jobs=4 --yes coq && \
     cd /opt && \
     curl -O https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz && \
@@ -35,8 +35,6 @@ RUN dpkg --add-architecture i386 && \
     cd /opt && \
     git clone --recursive -b master https://github.com/sireum/v3.git sireum-v3 && \
     $SIREUM_HOME/bin/sbt-launch.sh clean test:compile test:fastOptJS && \
-    SIREUM_PARALLEL_BUILD=false && \
-    $SIREUM_HOME/bin/sbt-launch.sh test && \
     sireum && \
     $SIREUM_HOME/bin/sbt-launch.sh clean && \
     git clone https://github.com/ksu-cis-706/compiler.git compiler && \
