@@ -28,7 +28,7 @@ for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
 ZULU_VERSION=10.1+11-jdk10
-SCALA_VERSION=2.12.4
+SCALA_VERSION=2.12.6
 SBT_VERSION=1.1.4
 NODE_VERSION=10.0.0
 Z3_VERSION=4.6.0
