@@ -466,7 +466,10 @@ lazy val sireumJvm =
             }
           },
           assemblyShadeRules in assembly := Seq(
-            ShadeRule.rename("com.**" -> "sh4d3.com.@1").inAll,
+            ShadeRule.rename("com.novocode.**" -> "sh4d3.com.novocode.@1").inAll,
+            ShadeRule.rename("com.sksamuel.**" -> "sh4d3.com.sksamuel.@1").inAll,
+            ShadeRule.rename("com.trueaccord.**" -> "sh4d3.com.trueaccord.@1").inAll,
+            ShadeRule.rename("com.zaxxer.**" -> "sh4d3.com.zaxxer.@1").inAll,
             ShadeRule.rename("fastparse.**" -> "sh4d3.fastparse.@1").inAll,
             ShadeRule.rename("google.**" -> "sh4d3.google.@1").inAll,
             ShadeRule.rename("org.langmeta.**" -> "sh4d3.org.langmeta.@1").inAll,
@@ -497,6 +500,7 @@ lazy val sireumJvm =
             case PathList("Scratch.class") => MergeStrategy.discard
             case PathList("Scratch$.class") => MergeStrategy.discard
             case PathList("Scratch$delayedInit$body.class") => MergeStrategy.discard
+            case PathList("sh4d3", "scala", "meta", _*) => MergeStrategy.first
             case PathList("org", "sireum", _*) =>
               new MergeStrategy {
                 override def name: String = "sireum"
