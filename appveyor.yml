@@ -23,7 +23,6 @@ environment:
   PATH: 'C:\%MSYS2_DIR%\%MSYSTEM%\bin;C:\%MSYS2_DIR%\usr\bin;%PATH%'
 
 cache:
-  - '%USERPROFILE%\.sbt -> project/build.properties'
   - platform -> bin\prelude.sh
   - apps -> bin\prelude.sh
 
