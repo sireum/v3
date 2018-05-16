@@ -24,8 +24,6 @@ environment:
 
 cache:
   - '%USERPROFILE%\.sbt -> project/build.properties'
-  - '%USERPROFILE%\.coursier -> versions.properties'
-  - '%LOCALAPPDATA%\Coursier\cache -> versions.properties'
   - platform -> bin\prelude.sh
   - apps -> bin\prelude.sh
 
