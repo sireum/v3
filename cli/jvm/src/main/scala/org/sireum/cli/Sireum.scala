@@ -31,7 +31,7 @@ import org.sireum._
 import org.sireum.message._
 import org.sireum.tools._
 
-object Sireum extends App {
+object Sireum extends scala.App {
   System.exit(Cli(_root_.java.io.File.pathSeparatorChar).parseSireum(ISZ(args.map(s => s: String): _*), Z(0)) match {
     case Some(o: Cli.LogikaOption) => Logika.run(o)
     case Some(o: Cli.SlangTipeOption) => SlangTipe.run(o)
