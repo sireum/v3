@@ -99,7 +99,7 @@
         tpe = Type.Flag(F), description = "Generate Bless entrypoints")
     ),
     groups = ISZ(
-      OptGroup(name = "Transpiler Options", opts = ISZ(
+      OptGroup(name = "Transpiler", opts = ISZ(
         Opt(name = "genTrans", longKey = "trans", shortKey = None(),
           tpe = Type.Flag(F), description = "Generate Slang/C code required for transpiler"),
         Opt(name = "ipc", longKey = "ipc", shortKey = None(),

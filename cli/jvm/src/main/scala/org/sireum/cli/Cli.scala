@@ -681,7 +681,7 @@ import Cli._
           |    --bless              Generate Bless entrypoints
           |-h, --help               Display this information
           |
-          |Transpiler Options Options:
+          |Transpiler Options:
           |    --trans              Generate Slang/C code required for transpiler
           |    --ipc                IPC communication mechanism (requires 'trans' option)
           |                           (expects one of { MessageQueue, SharedMemory };
