@@ -2,7 +2,7 @@
 // @formatter:off
 
 /*
- Copyright (c) 2017, Robby, Kansas State University
+ Copyright (c) 2018, Robby, Kansas State University
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -95,12 +95,22 @@ object Cli {
     outputDir: Option[String]
   ) extends SireumOption
 
+  @enum object Ipcmech {
+    'MessageQueue
+    'SharedMemory
+  }
+
   @datatype class ArsitOption(
     help: String,
     args: ISZ[String],
     json: B,
     inputFile: Option[String],
-    outputDir: Option[String]
+    outputDir: Option[String],
+    packageName: Option[String],
+    noart: B,
+    bless: B,
+    genTrans: B,
+    ipc: Ipcmech.Type
   ) extends SireumOption
 
   @datatype class AwasOption(
@@ -633,6 +643,25 @@ import Cli._
     }
   }
 
+  def parseIpcmechH(arg: String): Option[Ipcmech.Type] = {
+    arg.native match {
+      case "MessageQueue" => return Some(Ipcmech.MessageQueue)
+      case "SharedMemory" => return Some(Ipcmech.SharedMemory)
+      case s =>
+        eprintln(s"Expecting one of the following: { MessageQueue, SharedMemory }, but found '$s'.")
+        return None()
+    }
+  }
+
+  def parseIpcmech(args: ISZ[String], i: Z): Option[Ipcmech.Type] = {
+    if (i >= args.size) {
+      eprintln("Expecting one of the following: { MessageQueue, SharedMemory }, but none found.")
+      return None()
+    }
+    val r = parseIpcmechH(args(i))
+    return r
+  }
+
   def parseArsit(args: ISZ[String], i: Z): Option[SireumOption] = {
     val help =
       st"""Slang Generator
@@ -646,11 +675,26 @@ import Cli._
           |                           path)
           |-o, --output-dir         Output directory for the generated project files
           |                           (expects a path; default is ".")
-          |-h, --help               Display this information""".render
+          |    --package-name       Base package name for Slang project (output-dir's
+          |                           simple name used if not provided) (expects a string)
+          |    --noart              Do not embed ART project files
+          |    --bless              Generate Bless entrypoints
+          |-h, --help               Display this information
+          |
+          |Transpiler Options:
+          |    --trans              Generate Slang/C code required for transpiler
+          |    --ipc                IPC communication mechanism (requires 'trans' option)
+          |                           (expects one of { MessageQueue, SharedMemory };
+          |                           default: MessageQueue)""".render
 
     var json: B = false
     var inputFile: Option[String] = None[String]()
     var outputDir: Option[String] = Some(".")
+    var packageName: Option[String] = None[String]()
+    var noart: B = false
+    var bless: B = false
+    var genTrans: B = false
+    var ipc: Ipcmech.Type = Ipcmech.MessageQueue
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -677,6 +721,36 @@ import Cli._
              case Some(v) => outputDir = v
              case _ => return None()
            }
+         } else if (arg == "--package-name") {
+           val o: Option[Option[String]] = parseString(args, j + 1)
+           o match {
+             case Some(v) => packageName = v
+             case _ => return None()
+           }
+         } else if (arg == "--noart") {
+           val o: Option[B] = { j = j - 1; Some(!noart) }
+           o match {
+             case Some(v) => noart = v
+             case _ => return None()
+           }
+         } else if (arg == "--bless") {
+           val o: Option[B] = { j = j - 1; Some(!bless) }
+           o match {
+             case Some(v) => bless = v
+             case _ => return None()
+           }
+         } else if (arg == "--trans") {
+           val o: Option[B] = { j = j - 1; Some(!genTrans) }
+           o match {
+             case Some(v) => genTrans = v
+             case _ => return None()
+           }
+         } else if (arg == "--ipc") {
+           val o: Option[Ipcmech.Type] = parseIpcmech(args, j + 1)
+           o match {
+             case Some(v) => ipc = v
+             case _ => return None()
+           }
          } else {
           eprintln(s"Unrecognized option '$arg'.")
           return None()
@@ -686,7 +760,7 @@ import Cli._
         isOption = F
       }
     }
-    return Some(ArsitOption(help, parseArguments(args, j), json, inputFile, outputDir))
+    return Some(ArsitOption(help, parseArguments(args, j), json, inputFile, outputDir, packageName, noart, bless, genTrans, ipc))
   }
 
   def parseAwas(args: ISZ[String], i: Z): Option[SireumOption] = {

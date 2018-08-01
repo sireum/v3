@@ -87,9 +87,26 @@
       Opt(name = "inputFile", longKey = "input-file", shortKey = Some('f'),
         tpe = Type.Path(multiple = F, default = None()), description = "Read input from file rather than stdin"),
       Opt(name = "outputDir", longKey = "output-dir", shortKey = Some('o'),
-        tpe = Type.Path(multiple = F, default = Some(".")), description = "Output directory for the generated project files")
+        tpe = Type.Path(multiple = F, default = Some(".")), description = "Output directory for the generated project files"),
+
+      Opt(name = "packageName", longKey = "package-name", shortKey = None(),
+        tpe = Type.Str(sep = None(), default = None()), description = "Base package name for Slang project (output-dir's simple name used if not provided)"),
+
+      Opt(name = "noart", longKey = "noart", shortKey = None(),
+        tpe = Type.Flag(F), description = "Do not embed ART project files"),
+
+      Opt(name = "bless", longKey = "bless", shortKey = None(),
+        tpe = Type.Flag(F), description = "Generate Bless entrypoints")
     ),
-    groups = ISZ()
+    groups = ISZ(
+      OptGroup(name = "Transpiler", opts = ISZ(
+        Opt(name = "genTrans", longKey = "trans", shortKey = None(),
+          tpe = Type.Flag(F), description = "Generate Slang/C code required for transpiler"),
+        Opt(name = "ipc", longKey = "ipc", shortKey = None(),
+          tpe = Type.Choice(name = "ipcmech", sep = None(), elements = ISZ("MessageQueue", "SharedMemory")),
+          description = "IPC communication mechanism (requires 'trans' option)")
+      ))
+    )
   )
 
   val awasTool: Tool = Tool(

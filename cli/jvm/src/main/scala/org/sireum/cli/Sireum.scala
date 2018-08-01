@@ -172,26 +172,13 @@ object Sireum extends scala.App {
 
   def arsitGen(o: Cli.ArsitOption): Int = {
     try {
+      o.args.size match {
+        case z"0" => println(o.help); return 0
+        case _ =>
+      }
       val cls = Class.forName("org.sireum.aadl.arsit.Runner")
-      val m = cls.getDeclaredMethod("run", classOf[File], classOf[scala.Boolean], classOf[scala.Predef.String])
-
-      val destDir = path2fileOpt("output directory", o.outputDir, T).get
-      if (!destDir.isDirectory) {
-        println(s"Path ${destDir.getPath} is not a directory")
-        return -1
-      }
-
-      val inputFile = path2fileOpt("input file", o.inputFile, F)
-      val input = if (inputFile.nonEmpty) {
-        scala.io.Source.fromFile(inputFile.get).getLines.mkString
-      } else {
-        var s, l = ""
-        while ({ l = scala.io.StdIn.readLine; l != null }) s += l
-        s
-      }
-
-      // params need to extend Object
-      m.invoke(null, destDir, Boolean.box(o.json), input.toString).asInstanceOf[Int]
+      val m = cls.getDeclaredMethod("run", classOf[Cli.ArsitOption])
+      m.invoke(null, o).asInstanceOf[Int]
     } catch {
       case _: Throwable =>
         println(s"This feature is not available")

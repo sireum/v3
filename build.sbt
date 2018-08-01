@@ -395,7 +395,7 @@ lazy val awasJvm = awasT._2
 lazy val awasJs = awasT._3.settings(webSettings: _*)
 
 lazy val arsitPI =
-  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, macrosPI, libraryPI, airPI)
+  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, macrosPI, libraryPI, airPI, cliPI)
 lazy val arsit = toSbtJvmProject(arsitPI, slangSettings)
 
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, macrosPI, libraryPI, airPI)
