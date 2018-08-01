@@ -89,7 +89,7 @@
       Opt(name = "outputDir", longKey = "output-dir", shortKey = Some('o'),
         tpe = Type.Path(multiple = F, default = Some(".")), description = "Output directory for the generated project files"),
 
-      Opt(name = "packagename", longKey = "package-name", shortKey = None(),
+      Opt(name = "packageName", longKey = "package-name", shortKey = None(),
         tpe = Type.Str(sep = None(), default = None()), description = "Base package name for Slang project (output-dir's simple name used if not provided)"),
 
       Opt(name = "noart", longKey = "noart", shortKey = None(),
@@ -103,7 +103,7 @@
         Opt(name = "genTrans", longKey = "trans", shortKey = None(),
           tpe = Type.Flag(F), description = "Generate Slang/C code required for transpiler"),
         Opt(name = "ipc", longKey = "ipc", shortKey = None(),
-          tpe = Type.Choice(name = "ipcmech", sep = None(), elements = ISZ("message_queue", "shared_memory")),
+          tpe = Type.Choice(name = "ipcmech", sep = None(), elements = ISZ("MessageQueue", "SharedMemory")),
           description = "IPC communication mechanism (requires 'trans' option)")
       ))
     )

@@ -96,8 +96,8 @@ object Cli {
   ) extends SireumOption
 
   @enum object Ipcmech {
-    'Message_queue
-    'Shared_memory
+    'MessageQueue
+    'SharedMemory
   }
 
   @datatype class ArsitOption(
@@ -106,7 +106,7 @@ object Cli {
     json: B,
     inputFile: Option[String],
     outputDir: Option[String],
-    packagename: Option[String],
+    packageName: Option[String],
     noart: B,
     bless: B,
     genTrans: B,
@@ -645,17 +645,17 @@ import Cli._
 
   def parseIpcmechH(arg: String): Option[Ipcmech.Type] = {
     arg.native match {
-      case "message_queue" => return Some(Ipcmech.Message_queue)
-      case "shared_memory" => return Some(Ipcmech.Shared_memory)
+      case "MessageQueue" => return Some(Ipcmech.MessageQueue)
+      case "SharedMemory" => return Some(Ipcmech.SharedMemory)
       case s =>
-        eprintln(s"Expecting one of the following: { message_queue, shared_memory }, but found '$s'.")
+        eprintln(s"Expecting one of the following: { MessageQueue, SharedMemory }, but found '$s'.")
         return None()
     }
   }
 
   def parseIpcmech(args: ISZ[String], i: Z): Option[Ipcmech.Type] = {
     if (i >= args.size) {
-      eprintln("Expecting one of the following: { message_queue, shared_memory }, but none found.")
+      eprintln("Expecting one of the following: { MessageQueue, SharedMemory }, but none found.")
       return None()
     }
     val r = parseIpcmechH(args(i))
@@ -684,17 +684,17 @@ import Cli._
           |Transpiler Options Options:
           |    --trans              Generate Slang/C code required for transpiler
           |    --ipc                IPC communication mechanism (requires 'trans' option)
-          |                           (expects one of { message_queue, shared_memory };
-          |                           default: message_queue)""".render
+          |                           (expects one of { MessageQueue, SharedMemory };
+          |                           default: MessageQueue)""".render
 
     var json: B = false
     var inputFile: Option[String] = None[String]()
     var outputDir: Option[String] = Some(".")
-    var packagename: Option[String] = None[String]()
+    var packageName: Option[String] = None[String]()
     var noart: B = false
     var bless: B = false
     var genTrans: B = false
-    var ipc: Ipcmech.Type = Ipcmech.Message_queue
+    var ipc: Ipcmech.Type = Ipcmech.MessageQueue
     var j = i
     var isOption = T
     while (j < args.size && isOption) {
@@ -724,7 +724,7 @@ import Cli._
          } else if (arg == "--package-name") {
            val o: Option[Option[String]] = parseString(args, j + 1)
            o match {
-             case Some(v) => packagename = v
+             case Some(v) => packageName = v
              case _ => return None()
            }
          } else if (arg == "--noart") {
@@ -760,7 +760,7 @@ import Cli._
         isOption = F
       }
     }
-    return Some(ArsitOption(help, parseArguments(args, j), json, inputFile, outputDir, packagename, noart, bless, genTrans, ipc))
+    return Some(ArsitOption(help, parseArguments(args, j), json, inputFile, outputDir, packageName, noart, bless, genTrans, ipc))
   }
 
   def parseAwas(args: ISZ[String], i: Z): Option[SireumOption] = {
