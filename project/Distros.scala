@@ -68,7 +68,8 @@ object Distros {
     "asm" -> 41973,
     "bash" -> (if (isDev) 46357 else 46357),
     "batch" -> 22567,
-    "python" -> (if (isDev) 48089 else 48089)
+    "python" -> (if (isDev) 48089 else 48089),
+    "antlr" -> 34128
   ) ++ (if (isDev)
           Map(
             "compare" -> 24991,
