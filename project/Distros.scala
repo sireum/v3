@@ -74,7 +74,7 @@ object Distros {
           Map(
             "compare" -> 24991,
             "rst" -> 14700,
-            "latex" -> 18476,
+            "texify" -> 45397,
             "antlr" -> 34128,
             "gitextender" -> 41256,
             "gittoolbox" -> 47855
