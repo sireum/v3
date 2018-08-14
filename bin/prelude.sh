@@ -27,9 +27,9 @@ COMMANDS="rm mv git unzip wget bc"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
-ZULU_VERSION=10.2+3-jdk10.0.1
+ZULU_VERSION=10.3+5-jdk10.0.2
 SCALA_VERSION=2.12.6
-SBT_VERSION=1.2.0
+SBT_VERSION=1.2.1
 NODE_VERSION=10.8.0
 Z3_VERSION=4.7.1
 if [ -z "${PLATFORM}" ]; then
