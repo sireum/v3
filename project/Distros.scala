@@ -55,6 +55,7 @@ object Distros {
   val jarPlugins = Map(
     "rst" -> "rest.jar",
     "batch" -> "idea-batch.jar",
+    "latex" -> "idea-latex.jar",
     "sireum-injector" -> "sireum-injector.jar"
   )
 
@@ -73,7 +74,7 @@ object Distros {
           Map(
             "compare" -> 24991,
             "rst" -> 14700,
-            "texify" -> 18476,
+            "latex" -> 18476,
             "gitextender" -> 41256,
             "gittoolbox" -> 47855
           )
