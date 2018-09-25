@@ -48,7 +48,9 @@ object Pickling {
               locInfos = locInfos :+ info
               true
           })(node)
-          Js.Obj(jsObj.value :+(locField, Js.Arr(locInfos: _*)): _*)
+          var temp = mlinkedMapEmpty[String, Js.Value]
+          temp ++= jsObj.value.toList :+ (locField, Js.Arr(locInfos: _*))
+          Js.Obj(temp)
         case _ => jsObj
       }
     upickle.json.write(o)
@@ -61,7 +63,7 @@ object Pickling {
         o.value.last._1 == locField &&
           o.value.head._2.asInstanceOf[Js.Str].value == "Model" =>
           val a = o.value.last._2.asInstanceOf[Js.Arr]
-          (Js.Obj(o.value.dropRight(1): _*),
+          (Js.Obj(o.value.dropRight(1)),
             a.value.map(org.sireum.util.Json.toLocationInfo))
         case o => (o, ivectorEmpty)
       }

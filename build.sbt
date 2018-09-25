@@ -386,8 +386,10 @@ lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, airPI)
 lazy val awasT = toSbtCrossProject(awasPI, Seq(
   Test / parallelExecution := false,
   libraryDependencies ++= Seq(
+    "com.chuusai" %%% "shapeless" % "2.3.2",
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
-    "org.parboiled" %% "parboiled" % parboiled2Version
+    "org.parboiled" %%% "parboiled" % parboiled2Version,
+    "org.scala-lang.modules" %% "scala-async" % "0.9.7"
   )))
 
 lazy val awasShared = awasT._1
