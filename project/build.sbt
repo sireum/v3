@@ -1,1 +1,3 @@
-libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "1.2.1"
+resolvers ++= Seq(Resolver.sonatypeRepo("public"))
+
+libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "1.3.2"
