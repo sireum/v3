@@ -209,7 +209,7 @@ lazy val webSettings = sireumSettings ++ Seq(
 
 lazy val commonSlangSettings = Seq(
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
-  libraryDependencies += "org.sireum.runtime" %% "library" % runtimeVersion)
+  libraryDependencies += "org.sireum.runtime" %%% "library" % runtimeVersion)
 
 lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(
   scalacOptions ++= Seq("-Yrangepos"),
