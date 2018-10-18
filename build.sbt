@@ -115,6 +115,8 @@ lazy val spireVersion = property("org.sireum.version.spire")
 
 lazy val nuprocessVersion = property("org.sireum.version.nuprocess")
 
+lazy val runtimeVersion = ghLatestCommit("sireum", "runtime", "master")
+
 val BUILD_FILENAME = "BUILD"
 
 val isParallelBuild = "false" != System.getenv("SIREUM_PARALLEL_BUILD")
@@ -153,7 +155,7 @@ lazy val sireumSettings = Seq(
   Test / logBuffered := false,
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
-  resolvers += Resolver.sonatypeRepo("public"),
+  resolvers ++= Seq(Resolver.sonatypeRepo("public"), "jitpack" at "https://jitpack.io"),
   dependencyUpdatesFilter -= moduleFilter(organization = "com.lihaoyi", name = "upickle"),
   dependencyUpdatesFilter -= moduleFilter(organization = "org.scalatest"),
   dependencyUpdatesFilter -= moduleFilter(organization = "org.eclipse.jetty")
@@ -205,11 +207,23 @@ lazy val webSettings = sireumSettings ++ Seq(
   )
 )
 
-lazy val commonSlangSettings = Seq(addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion))
+lazy val commonSlangSettings = Seq(
+  addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
+  libraryDependencies += "org.sireum.runtime" %% "library" % runtimeVersion)
 
-lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(scalacOptions ++= Seq("-Yrangepos"))
+lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(
+  scalacOptions ++= Seq("-Yrangepos"),
+  libraryDependencies += "org.sireum.runtime" %%% "test" % runtimeVersion % "test")
 
 val depOpt = Some("test->test;compile->compile;test->compile")
+
+def ghLatestCommit(owner: String, repo: String, branch: String): String = {
+  import ammonite.ops._
+  val out = %%('git, "ls-remote", s"https://github.com/$owner/$repo.git")(pwd).out
+  for (line <- out.lines if line.contains(s"refs/heads/$branch"))
+    return line.substring(0, line.indexWhere(_.isWhitespace))
+  throw new RuntimeException(s"Could not determine latest commit for https://github.com/$owner/$repo.git branch $branch!")
+}
 
 def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSettings): Project =
   Project(id = pi.id, base = pi.baseDir / "jvm")
@@ -285,91 +299,19 @@ lazy val logikaJvm = logikaT._2
       logikaT._2.base / "c-runtime" / "include",
       logikaT._2.base / "c-runtime" / "src",
       logikaT._2.base / "c-runtime" / "cmake"
-    )
+    ),
+    libraryDependencies += "org.sireum.runtime" %% "library" % runtimeVersion
   )
-  .dependsOn(macrosJvm, libraryJvm)
 lazy val logikaJs = logikaT._3
 
-lazy val macrosPI = new ProjectInfo("runtime/macros", isCross = true)
-lazy val macrosT = toSbtCrossProject(
-  macrosPI,
-  Seq(
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
-    libraryDependencies ++= Seq("org.scala-lang" % "scala-reflect" % scalaVer)
-  )
-)
-lazy val macrosShared = macrosT._1
-lazy val macrosJvm = macrosT._2
-lazy val macrosJs = macrosT._3
-
-lazy val libraryPI = new ProjectInfo("runtime/library", isCross = true, macrosPI)
-lazy val libraryT = toSbtCrossProject(
-  libraryPI,
-  slangSettings ++ Seq(
-    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-l", "SireumRuntime"),
-    libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
-      "org.spire-math" %%% "spire" % spireVersion % "test"
-    )
-  )
-)
-lazy val libraryShared = libraryT._1
-lazy val libraryJvm = libraryT._2
-lazy val libraryJs = libraryT._3
-
-lazy val slangAstPI = new ProjectInfo("slang/ast", isCross = true, macrosPI, libraryPI)
-lazy val slangAstT = toSbtCrossProject(slangAstPI, slangSettings)
-lazy val slangAstShared = slangAstT._1
-lazy val slangAstJvm = slangAstT._2
-lazy val slangAstJs = slangAstT._3
-
-lazy val slangParserPI = new ProjectInfo("slang/parser", isCross = true, macrosPI, libraryPI, slangAstPI)
-lazy val slangParserT = toSbtCrossProject(
-  slangParserPI,
-  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalameta" %%% "scalameta" % metaVersion))
-)
-lazy val slangParserShared = slangParserT._1
-lazy val slangParserJvm = slangParserT._2
-lazy val slangParserJs = slangParserT._3
-
-lazy val slangTipePI = new ProjectInfo("slang/tipe", isCross = true, macrosPI, libraryPI, slangAstPI)
-lazy val slangTipeT = toSbtCrossProject(slangTipePI, slangSettings)
-lazy val slangTipeShared = slangTipeT._1
-lazy val slangTipeJvm = slangTipeT._2
-lazy val slangTipeJs = slangTipeT._3
-
-lazy val slangFrontEndPI = new ProjectInfo("slang/frontend", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI, slangTipePI)
-lazy val slangFrontEndT = toSbtCrossProject(
-  slangFrontEndPI,
-  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
-)
-lazy val slangFrontEndShared = slangFrontEndT._1
-lazy val slangFrontEndJvm = slangFrontEndT._2
-lazy val slangFrontEndJs = slangFrontEndT._3
-
-lazy val toolsPI = new ProjectInfo("tools", isCross = true, macrosPI, libraryPI, slangAstPI, slangParserPI, slangTipePI, slangFrontEndPI)
-lazy val toolsT = toSbtCrossProject(
-  toolsPI,
-  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
-)
-lazy val toolsShared = toolsT._1
-lazy val toolsJvm = toolsT._2
-lazy val toolsJs = toolsT._3
-
-lazy val webPI = new ProjectInfo("web", isCross = true, macrosPI, libraryPI, utilPI)
-lazy val webT = toSbtCrossProject(
-  webPI,
-  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
-)
+lazy val webPI = new ProjectInfo("web", isCross = true, utilPI)
+lazy val webT = toSbtCrossProject(webPI, slangSettings)
 lazy val webShared = webT._1
 lazy val webJvm = webT._2
 lazy val webJs = webT._3.settings(webSettings: _*)
 
-lazy val airPI = new ProjectInfo("aadl/ir", isCross = true, utilPI, testPI, macrosPI, libraryPI)
-lazy val airT = toSbtCrossProject(
-  airPI,
-  slangSettings ++ Seq(libraryDependencies ++= Seq("org.scalatest" %%% "scalatest" % scalaTestVersion % "test"))
-)
+lazy val airPI = new ProjectInfo("aadl/ir", isCross = true, utilPI, testPI)
+lazy val airT = toSbtCrossProject(airPI,slangSettings)
 lazy val airShared = airT._1
 lazy val airJvm = airT._2
 lazy val airJs = airT._3
@@ -379,7 +321,7 @@ lazy val airJs = airT._3
 lazy val javaPI = new ProjectInfo("java", isCross = false, utilPI, testPI, pilarPI)
 lazy val java = toSbtJvmProject(javaPI)
 
-lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI, toolsPI)
+lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI)
 lazy val cli = toSbtJvmProject(cliPI, sireumJvmSettings ++ commonSlangSettings)
 
 lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, airPI)
@@ -397,24 +339,17 @@ lazy val awasJvm = awasT._2
 lazy val awasJs = awasT._3.settings(webSettings: _*)
 
 lazy val arsitPI =
-  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, macrosPI, libraryPI, airPI, cliPI)
+  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, airPI, cliPI)
 lazy val arsit = toSbtJvmProject(arsitPI, slangSettings)
 
-lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, macrosPI, libraryPI, airPI)
+lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, airPI)
 lazy val minix = toSbtJvmProject(minixPI, slangSettings)
 
 lazy val subProjectsJvm = Seq(
   utilJvm,
   testJvm,
   pilarJvm,
-  macrosJvm,
-  libraryJvm,
   logikaJvm,
-  slangAstJvm,
-  slangParserJvm,
-  slangTipeJvm,
-  slangFrontEndJvm,
-  toolsJvm,
   java,
   cli,
   awasJvm,
@@ -429,14 +364,7 @@ lazy val subProjectsJs = Seq(
   utilJs,
   testJs,
   pilarJs,
-  macrosJs,
-  libraryJs,
   logikaJs,
-  slangAstJs,
-  slangParserJs,
-  slangTipeJs,
-  slangFrontEndJs,
-  toolsJs,
   awasJs,
   airJs
 )

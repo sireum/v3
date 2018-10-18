@@ -141,7 +141,7 @@
       st"""Sireum: A Software Analysis Platform (v3)
           |(c) 2018, SAnToS Laboratory, Kansas State University""".render,
     unlisted = F,
-    subs = ISZ(logikaTool, org.sireum.tools.cli.group, xGroup)
+    subs = ISZ(logikaTool, xGroup)
   )
 
   mainGroup
