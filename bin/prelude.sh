@@ -32,7 +32,9 @@ SCALA_VERSION=2.12.7
 SBT_VERSION=1.2.6
 NODE_VERSION=10.12.0
 Z3_VERSION=4.8.1
-Z3_HASH=016872a5e0f6
+Z3_MAC_HASH=b301a59899ff
+Z3_LINUX_HASH=016872a5e0f6
+Z3_WIN_HASH=016872a5e0f6
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
     PLATFORM=win
@@ -45,16 +47,16 @@ fi
 if [ "${PLATFORM}" = "win"  ]; then
   ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-win_x64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/win-x64/node.exe
-  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}.${Z3_HASH}-x64-win.zip
+  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}.${Z3_WIN_HASH}-x64-win.zip
 elif [ "${PLATFORM}" = "mac"  ]; then
   ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-macosx_x64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
-  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}.${Z3_HASH}-x64-osx-10.11.6.zip
+  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}.${Z3_MAC_HASH}-x64-osx-10.11.6.zip
 elif [ "${PLATFORM}" = "linux"  ]; then
   type -P xz &>/dev/null || { >&2 echo "xz command not found."; exit 1; }
   ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-linux_x64.tar.gz
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz
-  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}.${Z3_HASH}-x64-ubuntu-14.04.zip
+  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}.${Z3_LINUX_HASH}-x64-ubuntu-14.04.zip
 else
   >&2 echo "Sireum does not support: $(uname)."
   exit 1
