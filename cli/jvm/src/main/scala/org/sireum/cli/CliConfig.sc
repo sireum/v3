@@ -80,12 +80,11 @@
     command = "arsit",
     description = "Generate Slang project from Aadl IR",
     header = "Slang Generator",
-    usage = "<option>*",
+    usage = "<option>* air-file",
     opts = ISZ(
       Opt(name = "json", longKey = "json", shortKey = Some('j'),
         tpe = Type.Flag(F), description = "Input serialized using Json (otherwise MsgPack assumed)"),
-      Opt(name = "inputFile", longKey = "input-file", shortKey = Some('f'),
-        tpe = Type.Path(multiple = F, default = None()), description = "Read input from file rather than stdin"),
+
       Opt(name = "outputDir", longKey = "output-dir", shortKey = Some('o'),
         tpe = Type.Path(multiple = F, default = Some(".")), description = "Output directory for the generated project files"),
 
