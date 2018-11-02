@@ -57,14 +57,7 @@ object PrettyPrinterTestDefProvider {
 final class PrettyPrinterTestDefProvider(tf: TestFramework)
   extends TestDefProvider {
 
-  def lines(s: String): Seq[String] = {
-    import scala.collection.JavaConverters._
-    var r = ivectorEmpty[String]
-    for (line <- s.lines.iterator.asScala) {
-      r = r :+ line
-    }
-    r
-  }
+  def lines(s: String): Seq[String] = s.linesIterator.toSeq
 
   override def testDefs: ISeq[TestDef] = ivector(
 
