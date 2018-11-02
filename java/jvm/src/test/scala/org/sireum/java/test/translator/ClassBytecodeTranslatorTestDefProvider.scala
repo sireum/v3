@@ -42,7 +42,16 @@ final class ClassBytecodeTranslatorTestDefProvider(tf: TestFramework)
 
   private def translate(c: Class[_]): String = {
     val s = c.getResourceAsStream(c.getSimpleName + ".class")
-    val pilar = PrettyPrinter(ClassBytecodeTranslator(new org.objectweb.asm.ClassReader(s))).lines.mkString("\n")
+    val lines = {
+      {
+        import scala.collection.JavaConverters._
+        var r = ivectorEmpty[String]
+        for (line <- PrettyPrinter(ClassBytecodeTranslator(new org.objectweb.asm.ClassReader(s))).lines.iterator.asScala) {
+          r = r :+ line
+        }
+        r
+      }    }
+    val pilar = lines.mkString("\n")
     s.close()
     //println(pilar)
     StringUtil.md5(pilar)

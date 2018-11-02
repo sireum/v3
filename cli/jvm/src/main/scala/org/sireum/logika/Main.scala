@@ -404,7 +404,14 @@ class Main(option: LogikaOption,
   }
 
   def alignRightLineComment(text: String, prefix: String = "// L"): String = {
-    val lines = text.lines.toVector
+    val lines = {
+      import scala.collection.JavaConverters._
+      var r = ivectorEmpty[String]
+      for (line <- text.lines.iterator.asScala) {
+        r = r :+ line
+      }
+      r
+    }
     var maxCommentColumn = -1
     for (line <- lines) {
       var i = line.lastIndexOf(prefix)

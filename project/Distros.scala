@@ -64,7 +64,7 @@ object Distros {
     "sireum-injector" -> (if (isDev) 0 else 48443),
     "jdt" -> 32149,
     "scala" -> (if (isDev) 49539 else 48884),
-    "markdown" -> (if (isDev) 48843 else 45898),
+    "markdown" -> (if (isDev) 51190 else 45898),
     "asm" -> 41973,
     "bash" -> (if (isDev) 46357 else 46357),
     "batch" -> 22567,
@@ -76,7 +76,7 @@ object Distros {
             "rst" -> 14700,
             "latex" -> 18476,
             "gitextender" -> 41256,
-            "gittoolbox" -> 50559
+            "gittoolbox" -> 51585
           )
         else Map())
 
