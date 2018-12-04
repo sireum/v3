@@ -498,7 +498,7 @@ lazy val sireum = Project(id = "sireum", base = file("."))
 
         def touche(p: Path): Unit = {
           val text = read ! p
-          if (text.last == '\n') {
+          if (text.charAt(text.length - 1) == '\n') {
             write.over(p, text.trim)
           } else {
             write.over(p, text + '\n')
