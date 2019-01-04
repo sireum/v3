@@ -28,7 +28,6 @@ export SIREUM_HOME=$( cd "$( dirname "$0" )"/.. &> /dev/null && pwd )
 PRELUDE=${SIREUM_HOME}/bin/prelude.sh
 ${SIREUM_HOME}/bin/prelude.sh
 JAVA=${SIREUM_HOME}/platform/java/bin/java
-SBT_JAR=${SIREUM_HOME}/platform/sbt/bin/sbt-launch.jar
 NODE_BIN=${SIREUM_HOME}/platform/node/bin
 Z3=${SIREUM_HOME}/apps/z3/bin/z3
 if [ ! -x ${JAVA} ] || [ ! -f ${SBT_JAR} ] || [ ! -d ${NODE_BIN} ] || [ ! -x ${Z3} ]; then
@@ -48,4 +47,10 @@ for i in "$@" ; do
     break
   fi
 done
+if [[ $(uname -s) == CYGWIN* ]]; then
+  SBT_JAR=$( cygpath -C OEM -aw ${SIREUM_HOME}/platform/sbt/bin/sbt-launch.jar )
+  export SIREUM_HOME=$( cygpath -C OEM -aw ${SIREUM_HOME} )
+else
+  SBT_JAR=${SIREUM_HOME}/platform/sbt/bin/sbt-launch.jar
+fi
 ${JAVA} ${JVM_OPTS} -Dfile.encoding=UTF-8 -jar ${SBT_JAR} "$@"

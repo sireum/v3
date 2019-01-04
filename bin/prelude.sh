@@ -162,6 +162,9 @@ if [ ! -d "z3" ] || [ "${Z3_UPDATE}" = "true" ]; then
   mv ${Z3_DIR} z3
   if [ -d "z3/bin" ]; then
     echo "${Z3_VERSION}" > z3/VER
+    if [[ $(uname -s) == CYGWIN* ]]; then
+      chmod +x z3/bin/*.dll z3/bin/*.exe
+    fi 
   else
     >&2 echo "Could not install Z3 ${Z3_VERSION}."
     exit 1
