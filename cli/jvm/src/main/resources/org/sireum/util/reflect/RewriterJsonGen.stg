@@ -116,9 +116,9 @@ case "%name%" => %fullName%
 >>
 
 caseToArg(type, i, arg) ::= <<
-%type%(o.value(%i%)._2)%if(arg)%(%arg; separator=", "%)%endif%
+%type%(o.value.toSeq(%i%)._2)%if(arg)%(%arg; separator=", "%)%endif%
 >>
 
 caseToExternArg(i, className) ::= <<
-externMap("%className%")._2(toStr(o.value(%i%)._2))
+externMap("%className%")._2(toStr(o.value.toSeq(%i%)._2))
 >>
