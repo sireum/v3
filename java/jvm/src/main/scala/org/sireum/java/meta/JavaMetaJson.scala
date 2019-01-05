@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2017, Robby, Kansas State University
+Copyright (c) 2019, Robby, Kansas State University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -478,316 +478,139 @@ object JavaMetaJson {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
            case "Annotation" =>
-            org.sireum.java.meta.Annotation(toStr(o.value.toList(1)._2), toVector(o.value.toList(2)._2)(toJavaMeta[Arg]))
+             org.sireum.java.meta.Annotation(toStr(o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toJavaMeta[Arg]))
            case "Arg" =>
-            org.sireum.java.meta.Arg(toStr(o.value.toList(1)._2), toJavaMeta[ArgValue](o.value.toList(2)._2))
+             org.sireum.java.meta.Arg(toStr(o.value.toSeq(1)._2), toJavaMeta[ArgValue](o.value.toSeq(2)._2))
            case "ArrayElement" => org.sireum.java.meta.ArrayElement
            case "ArrayType" =>
-            org.sireum.java.meta.ArrayType(toJavaMeta[Type](o.value.toList(1)._2))
+             org.sireum.java.meta.ArrayType(toJavaMeta[Type](o.value.toSeq(1)._2))
            case "ArrayValue" =>
-            org.sireum.java.meta.ArrayValue(toVector(o.value.toList(1)._2)(toJavaMeta[ArgValue]))
+             org.sireum.java.meta.ArrayValue(toVector(o.value.toSeq(1)._2)(toJavaMeta[ArgValue]))
            case "Attribute" =>
-            org.sireum.java.meta.Attribute(toStr(o.value.toList(1)._2), toByteArray(o.value.toList(2)._2))
+             org.sireum.java.meta.Attribute(toStr(o.value.toSeq(1)._2), toByteArray(o.value.toSeq(2)._2))
            case "BooleanType" => org.sireum.java.meta.BooleanType
            case "ByteType" => org.sireum.java.meta.ByteType
            case "ByteValue" =>
-            org.sireum.java.meta.ByteValue(toByte(o.value.toList(1)._2))
+             org.sireum.java.meta.ByteValue(toByte(o.value.toSeq(1)._2))
            case "CastTypeAnnotation" =>
-            org.sireum.java.meta.CastTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "Catch" =>
-            org.sireum.java.meta.Catch(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toOption(o.value.toList(4)._2)(toStr),
-              toVector(o.value.toList(5)._2)(toJavaMeta[ExceptionParameterTypeAnnotation])
-            )
+             org.sireum.java.meta.CastTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "Catch" =>
+             org.sireum.java.meta.Catch(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toOption(o.value.toSeq(4)._2)(toStr), toVector(o.value.toSeq(5)._2)(toJavaMeta[ExceptionParameterTypeAnnotation]))
            case "CharType" => org.sireum.java.meta.CharType
-          case "CharValue" =>
-            org.sireum.java.meta.CharValue(toChar(o.value.toList(1)._2))
-          case "Class" =>
-            org.sireum.java.meta.Class(
-              toInt(o.value.toList(1)._2),
-              toVector(o.value.toList(2)._2)(toStr),
-              toStr(o.value.toList(3)._2),
-              toOption(o.value.toList(4)._2)(toStr),
-              toOption(o.value.toList(5)._2)(toStr),
-              toVector(o.value.toList(6)._2)(toStr),
-              toOption(o.value.toList(7)._2)(toStr),
-              toOption(o.value.toList(8)._2)(toStr),
-              toOption(o.value.toList(9)._2)(toJavaMeta[OuterClass]),
-              toVector(o.value.toList(10)._2)(toJavaMeta[EntityAnnotation]),
-              toVector(o.value.toList(11)._2)(toJavaMeta[ClassTypeAnnotation]),
-              toVector(o.value.toList(12)._2)(toJavaMeta[Attribute]),
-              toVector(o.value.toList(13)._2)(toJavaMeta[InnerClass]),
-              toVector(o.value.toList(14)._2)(toJavaMeta[Field]),
-              toVector(o.value.toList(15)._2)(toJavaMeta[Method])
-            )
-          case "ClassExtendsTypeAnnotation" =>
-            org.sireum.java.meta.ClassExtendsTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "ClassTypeParameterBoundTypeAnnotation" =>
-            org.sireum.java.meta.ClassTypeParameterBoundTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "ClassTypeParameterTypeAnnotation" =>
-            org.sireum.java.meta.ClassTypeParameterTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "ConstructorInvocationTypeArgumentTypeAnnotation" =>
-            org.sireum.java.meta.ConstructorInvocationTypeArgumentTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "ConstructorReferenceTypeAnnotation" =>
-            org.sireum.java.meta.ConstructorReferenceTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "ConstructorReferenceTypeArgumentTypeAnnotation" =>
-            org.sireum.java.meta.ConstructorReferenceTypeArgumentTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "DoubleType" => org.sireum.java.meta.DoubleType
-          case "DoubleValue" =>
-            org.sireum.java.meta.DoubleValue(toDouble(o.value.toList(1)._2))
-          case "EntityAnnotation" =>
-            org.sireum.java.meta.EntityAnnotation(toJavaMeta[Annotation](o.value.toList(1)._2), toBoolean(o.value.toList(2)._2))
-          case "EnumValue" =>
-            org.sireum.java.meta.EnumValue(toStr(o.value.toList(1)._2), toStr(o.value.toList(2)._2))
-          case "ExceptionParameterTypeAnnotation" =>
-            org.sireum.java.meta.ExceptionParameterTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "FalseValue" => org.sireum.java.meta.FalseValue
-          case "Field" =>
-            org.sireum.java.meta.Field(
-              toVector(o.value.toList(1)._2)(toStr),
-              toStr(o.value.toList(2)._2),
-              toJavaMeta[Type](o.value.toList(3)._2),
-              toOption(o.value.toList(4)._2)(toStr),
-              toOption(o.value.toList(5)._2)(toJavaMeta[InitValue]),
-              toVector(o.value.toList(6)._2)(toJavaMeta[EntityAnnotation]),
-              toVector(o.value.toList(7)._2)(toJavaMeta[FieldTypeAnnotation]),
-              toVector(o.value.toList(8)._2)(toJavaMeta[Attribute])
-            )
-          case "FieldTypeAnnotation" =>
-            org.sireum.java.meta.FieldTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "FloatType" => org.sireum.java.meta.FloatType
-          case "FloatValue" =>
-            org.sireum.java.meta.FloatValue(toFloat(o.value.toList(1)._2))
-          case "GetFieldHandle" =>
-            org.sireum.java.meta.GetFieldHandle(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toJavaMeta[Type](o.value.toList(4)._2)
-            )
-          case "GetStaticFieldHandle" =>
-            org.sireum.java.meta.GetStaticFieldHandle(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toJavaMeta[Type](o.value.toList(4)._2)
-            )
-          case "InnerClass" =>
-            org.sireum.java.meta.InnerClass(
-              toStr(o.value.toList(1)._2),
-              toOption(o.value.toList(2)._2)(toStr),
-              toOption(o.value.toList(3)._2)(toStr),
-              toVector(o.value.toList(4)._2)(toStr)
-            )
-          case "InnerType" => org.sireum.java.meta.InnerType
-          case "InstanceOfTypeAnnotation" =>
-            org.sireum.java.meta.InstanceOfTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "IntType" => org.sireum.java.meta.IntType
-          case "IntValue" =>
-            org.sireum.java.meta.IntValue(toInt(o.value.toList(1)._2))
-          case "InvokeInterfaceHandle" =>
-            org.sireum.java.meta.InvokeInterfaceHandle(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toJavaMeta[MethodType](o.value.toList(4)._2)
-            )
-          case "InvokeSpecialHandle" =>
-            org.sireum.java.meta.InvokeSpecialHandle(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toJavaMeta[MethodType](o.value.toList(4)._2)
-            )
-          case "InvokeStaticHandle" =>
-            org.sireum.java.meta.InvokeStaticHandle(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toJavaMeta[MethodType](o.value.toList(4)._2)
-            )
-          case "InvokeVirtualHandle" =>
-            org.sireum.java.meta.InvokeVirtualHandle(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toJavaMeta[MethodType](o.value.toList(4)._2)
-            )
-          case "LocalVar" =>
-            org.sireum.java.meta.LocalVar(
-              toStr(o.value.toList(1)._2),
-              toJavaMeta[Type](o.value.toList(2)._2),
-              toOption(o.value.toList(3)._2)(toStr),
-              toStr(o.value.toList(4)._2),
-              toStr(o.value.toList(5)._2),
-              toInt(o.value.toList(6)._2)
-            )
-          case "LocalVarAnnotationElement" =>
-            org.sireum.java.meta.LocalVarAnnotationElement(toStr(o.value.toList(1)._2), toStr(o.value.toList(2)._2), toInt(o.value.toList(3)._2))
-          case "LocalVariableTypeAnnotation" =>
-            org.sireum.java.meta.LocalVariableTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2),
-              toVector(o.value.toList(3)._2)(toJavaMeta[LocalVarAnnotationElement])
-            )
-          case "LongType" => org.sireum.java.meta.LongType
-          case "LongValue" =>
-            org.sireum.java.meta.LongValue(toLong(o.value.toList(1)._2))
-          case "Method" =>
-            org.sireum.java.meta.Method(
-              toVector(o.value.toList(1)._2)(toStr),
-              toStr(o.value.toList(2)._2),
-              toJavaMeta[MethodType](o.value.toList(3)._2),
-              toOption(o.value.toList(4)._2)(toStr),
-              toVector(o.value.toList(5)._2)(toStr),
-              toVector(o.value.toList(6)._2)(toJavaMeta[Parameter]),
-              toOption(o.value.toList(7)._2)(toJavaMeta[Annotation]),
-              toVector(o.value.toList(8)._2)(toJavaMeta[EntityAnnotation]),
-              toVector(o.value.toList(9)._2)(toJavaMeta[MethodTypeAnnotation]),
-              toVector(o.value.toList(10)._2)(toJavaMeta[Attribute]),
-              toVector(o.value.toList(11)._2)(toJavaMeta[LocalVar]),
-              toVector(o.value.toList(12)._2)(toJavaMeta[LocalVarTypeAnnotation])
-            )
-          case "MethodFormalParameterTypeAnnotation" =>
-            org.sireum.java.meta.MethodFormalParameterTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "MethodInvocationTypeArgumentTypeAnnotation" =>
-            org.sireum.java.meta.MethodInvocationTypeArgumentTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "MethodReceiverTypeAnnotation" =>
-            org.sireum.java.meta.MethodReceiverTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "MethodReferenceTypeAnnotation" =>
-            org.sireum.java.meta.MethodReferenceTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "MethodReferenceTypeArgumentTypeAnnotation" =>
-            org.sireum.java.meta.MethodReferenceTypeArgumentTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "MethodReturnTypeAnnotation" =>
-            org.sireum.java.meta.MethodReturnTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "MethodType" =>
-            org.sireum.java.meta.MethodType(
-              toStr(o.value.toList(1)._2),
-              toVector(o.value.toList(2)._2)(toJavaMeta[Type]),
-              toJavaMeta[Type](o.value.toList(3)._2)
-            )
-          case "MethodTypeParameterBoundTypeAnnotation" =>
-            org.sireum.java.meta.MethodTypeParameterBoundTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "MethodTypeParameterTypeAnnotation" =>
-            org.sireum.java.meta.MethodTypeParameterTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "NewInvokeSpecialHandle" =>
-            org.sireum.java.meta.NewInvokeSpecialHandle(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toJavaMeta[MethodType](o.value.toList(4)._2)
-            )
-          case "NewTypeAnnotation" =>
-            org.sireum.java.meta.NewTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "OuterClass" =>
-            org.sireum.java.meta.OuterClass(toStr(o.value.toList(1)._2), toOption(o.value.toList(2)._2)(toTuple2))
-          case "Parameter" =>
-            org.sireum.java.meta.Parameter(
-              toVector(o.value.toList(1)._2)(toStr),
-              toOption(o.value.toList(2)._2)(toStr),
-              toVector(o.value.toList(3)._2)(toJavaMeta[EntityAnnotation])
-            )
-          case "PutFieldHandle" =>
-            org.sireum.java.meta.PutFieldHandle(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toJavaMeta[Type](o.value.toList(4)._2)
-            )
-          case "PutStaticFieldHandle" =>
-            org.sireum.java.meta.PutStaticFieldHandle(
-              toStr(o.value.toList(1)._2),
-              toStr(o.value.toList(2)._2),
-              toStr(o.value.toList(3)._2),
-              toJavaMeta[Type](o.value.toList(4)._2)
-            )
-          case "ResourceVariableTypeAnnotation" =>
-            org.sireum.java.meta.ResourceVariableTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2),
-              toVector(o.value.toList(3)._2)(toJavaMeta[LocalVarAnnotationElement])
-            )
-          case "ShortType" => org.sireum.java.meta.ShortType
-          case "ShortValue" =>
-            org.sireum.java.meta.ShortValue(toShort(o.value.toList(1)._2))
-          case "StringValue" =>
-            org.sireum.java.meta.StringValue(toStr(o.value.toList(1)._2))
-          case "ThrowsTypeAnnotation" =>
-            org.sireum.java.meta.ThrowsTypeAnnotation(
-              toOption(o.value.toList(1)._2)(toJavaMeta[TypePath]),
-              toJavaMeta[EntityAnnotation](o.value.toList(2)._2)
-            )
-          case "TrueValue" => org.sireum.java.meta.TrueValue
-          case "TypeArgument" =>
-            org.sireum.java.meta.TypeArgument(toInt(o.value.toList(1)._2))
-          case "TypePath" =>
-            org.sireum.java.meta.TypePath(toVector(o.value.toList(1)._2)(toJavaMeta[Step]))
-          case "TypeValue" =>
-            org.sireum.java.meta.TypeValue(toJavaMeta[Type](o.value.toList(1)._2))
-          case "VoidType" => org.sireum.java.meta.VoidType
+           case "CharValue" =>
+             org.sireum.java.meta.CharValue(toChar(o.value.toSeq(1)._2))
+           case "Class" =>
+             org.sireum.java.meta.Class(toInt(o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toStr), toStr(o.value.toSeq(3)._2), toOption(o.value.toSeq(4)._2)(toStr), toOption(o.value.toSeq(5)._2)(toStr), toVector(o.value.toSeq(6)._2)(toStr), toOption(o.value.toSeq(7)._2)(toStr), toOption(o.value.toSeq(8)._2)(toStr), toOption(o.value.toSeq(9)._2)(toJavaMeta[OuterClass]), toVector(o.value.toSeq(10)._2)(toJavaMeta[EntityAnnotation]), toVector(o.value.toSeq(11)._2)(toJavaMeta[ClassTypeAnnotation]), toVector(o.value.toSeq(12)._2)(toJavaMeta[Attribute]), toVector(o.value.toSeq(13)._2)(toJavaMeta[InnerClass]), toVector(o.value.toSeq(14)._2)(toJavaMeta[Field]), toVector(o.value.toSeq(15)._2)(toJavaMeta[Method]))
+           case "ClassExtendsTypeAnnotation" =>
+             org.sireum.java.meta.ClassExtendsTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "ClassTypeParameterBoundTypeAnnotation" =>
+             org.sireum.java.meta.ClassTypeParameterBoundTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "ClassTypeParameterTypeAnnotation" =>
+             org.sireum.java.meta.ClassTypeParameterTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "ConstructorInvocationTypeArgumentTypeAnnotation" =>
+             org.sireum.java.meta.ConstructorInvocationTypeArgumentTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "ConstructorReferenceTypeAnnotation" =>
+             org.sireum.java.meta.ConstructorReferenceTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "ConstructorReferenceTypeArgumentTypeAnnotation" =>
+             org.sireum.java.meta.ConstructorReferenceTypeArgumentTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "DoubleType" => org.sireum.java.meta.DoubleType
+           case "DoubleValue" =>
+             org.sireum.java.meta.DoubleValue(toDouble(o.value.toSeq(1)._2))
+           case "EntityAnnotation" =>
+             org.sireum.java.meta.EntityAnnotation(toJavaMeta[Annotation](o.value.toSeq(1)._2), toBoolean(o.value.toSeq(2)._2))
+           case "EnumValue" =>
+             org.sireum.java.meta.EnumValue(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2))
+           case "ExceptionParameterTypeAnnotation" =>
+             org.sireum.java.meta.ExceptionParameterTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "FalseValue" => org.sireum.java.meta.FalseValue
+           case "Field" =>
+             org.sireum.java.meta.Field(toVector(o.value.toSeq(1)._2)(toStr), toStr(o.value.toSeq(2)._2), toJavaMeta[Type](o.value.toSeq(3)._2), toOption(o.value.toSeq(4)._2)(toStr), toOption(o.value.toSeq(5)._2)(toJavaMeta[InitValue]), toVector(o.value.toSeq(6)._2)(toJavaMeta[EntityAnnotation]), toVector(o.value.toSeq(7)._2)(toJavaMeta[FieldTypeAnnotation]), toVector(o.value.toSeq(8)._2)(toJavaMeta[Attribute]))
+           case "FieldTypeAnnotation" =>
+             org.sireum.java.meta.FieldTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "FloatType" => org.sireum.java.meta.FloatType
+           case "FloatValue" =>
+             org.sireum.java.meta.FloatValue(toFloat(o.value.toSeq(1)._2))
+           case "GetFieldHandle" =>
+             org.sireum.java.meta.GetFieldHandle(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toJavaMeta[Type](o.value.toSeq(4)._2))
+           case "GetStaticFieldHandle" =>
+             org.sireum.java.meta.GetStaticFieldHandle(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toJavaMeta[Type](o.value.toSeq(4)._2))
+           case "InnerClass" =>
+             org.sireum.java.meta.InnerClass(toStr(o.value.toSeq(1)._2), toOption(o.value.toSeq(2)._2)(toStr), toOption(o.value.toSeq(3)._2)(toStr), toVector(o.value.toSeq(4)._2)(toStr))
+           case "InnerType" => org.sireum.java.meta.InnerType
+           case "InstanceOfTypeAnnotation" =>
+             org.sireum.java.meta.InstanceOfTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "IntType" => org.sireum.java.meta.IntType
+           case "IntValue" =>
+             org.sireum.java.meta.IntValue(toInt(o.value.toSeq(1)._2))
+           case "InvokeInterfaceHandle" =>
+             org.sireum.java.meta.InvokeInterfaceHandle(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toJavaMeta[MethodType](o.value.toSeq(4)._2))
+           case "InvokeSpecialHandle" =>
+             org.sireum.java.meta.InvokeSpecialHandle(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toJavaMeta[MethodType](o.value.toSeq(4)._2))
+           case "InvokeStaticHandle" =>
+             org.sireum.java.meta.InvokeStaticHandle(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toJavaMeta[MethodType](o.value.toSeq(4)._2))
+           case "InvokeVirtualHandle" =>
+             org.sireum.java.meta.InvokeVirtualHandle(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toJavaMeta[MethodType](o.value.toSeq(4)._2))
+           case "LocalVar" =>
+             org.sireum.java.meta.LocalVar(toStr(o.value.toSeq(1)._2), toJavaMeta[Type](o.value.toSeq(2)._2), toOption(o.value.toSeq(3)._2)(toStr), toStr(o.value.toSeq(4)._2), toStr(o.value.toSeq(5)._2), toInt(o.value.toSeq(6)._2))
+           case "LocalVarAnnotationElement" =>
+             org.sireum.java.meta.LocalVarAnnotationElement(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toInt(o.value.toSeq(3)._2))
+           case "LocalVariableTypeAnnotation" =>
+             org.sireum.java.meta.LocalVariableTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2), toVector(o.value.toSeq(3)._2)(toJavaMeta[LocalVarAnnotationElement]))
+           case "LongType" => org.sireum.java.meta.LongType
+           case "LongValue" =>
+             org.sireum.java.meta.LongValue(toLong(o.value.toSeq(1)._2))
+           case "Method" =>
+             org.sireum.java.meta.Method(toVector(o.value.toSeq(1)._2)(toStr), toStr(o.value.toSeq(2)._2), toJavaMeta[MethodType](o.value.toSeq(3)._2), toOption(o.value.toSeq(4)._2)(toStr), toVector(o.value.toSeq(5)._2)(toStr), toVector(o.value.toSeq(6)._2)(toJavaMeta[Parameter]), toOption(o.value.toSeq(7)._2)(toJavaMeta[Annotation]), toVector(o.value.toSeq(8)._2)(toJavaMeta[EntityAnnotation]), toVector(o.value.toSeq(9)._2)(toJavaMeta[MethodTypeAnnotation]), toVector(o.value.toSeq(10)._2)(toJavaMeta[Attribute]), toVector(o.value.toSeq(11)._2)(toJavaMeta[LocalVar]), toVector(o.value.toSeq(12)._2)(toJavaMeta[LocalVarTypeAnnotation]))
+           case "MethodFormalParameterTypeAnnotation" =>
+             org.sireum.java.meta.MethodFormalParameterTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "MethodInvocationTypeArgumentTypeAnnotation" =>
+             org.sireum.java.meta.MethodInvocationTypeArgumentTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "MethodReceiverTypeAnnotation" =>
+             org.sireum.java.meta.MethodReceiverTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "MethodReferenceTypeAnnotation" =>
+             org.sireum.java.meta.MethodReferenceTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "MethodReferenceTypeArgumentTypeAnnotation" =>
+             org.sireum.java.meta.MethodReferenceTypeArgumentTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "MethodReturnTypeAnnotation" =>
+             org.sireum.java.meta.MethodReturnTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "MethodType" =>
+             org.sireum.java.meta.MethodType(toStr(o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toJavaMeta[Type]), toJavaMeta[Type](o.value.toSeq(3)._2))
+           case "MethodTypeParameterBoundTypeAnnotation" =>
+             org.sireum.java.meta.MethodTypeParameterBoundTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "MethodTypeParameterTypeAnnotation" =>
+             org.sireum.java.meta.MethodTypeParameterTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "NewInvokeSpecialHandle" =>
+             org.sireum.java.meta.NewInvokeSpecialHandle(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toJavaMeta[MethodType](o.value.toSeq(4)._2))
+           case "NewTypeAnnotation" =>
+             org.sireum.java.meta.NewTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "OuterClass" =>
+             org.sireum.java.meta.OuterClass(toStr(o.value.toSeq(1)._2), toOption(o.value.toSeq(2)._2)(toTuple2))
+           case "Parameter" =>
+             org.sireum.java.meta.Parameter(toVector(o.value.toSeq(1)._2)(toStr), toOption(o.value.toSeq(2)._2)(toStr), toVector(o.value.toSeq(3)._2)(toJavaMeta[EntityAnnotation]))
+           case "PutFieldHandle" =>
+             org.sireum.java.meta.PutFieldHandle(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toJavaMeta[Type](o.value.toSeq(4)._2))
+           case "PutStaticFieldHandle" =>
+             org.sireum.java.meta.PutStaticFieldHandle(toStr(o.value.toSeq(1)._2), toStr(o.value.toSeq(2)._2), toStr(o.value.toSeq(3)._2), toJavaMeta[Type](o.value.toSeq(4)._2))
+           case "ResourceVariableTypeAnnotation" =>
+             org.sireum.java.meta.ResourceVariableTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2), toVector(o.value.toSeq(3)._2)(toJavaMeta[LocalVarAnnotationElement]))
+           case "ShortType" => org.sireum.java.meta.ShortType
+           case "ShortValue" =>
+             org.sireum.java.meta.ShortValue(toShort(o.value.toSeq(1)._2))
+           case "StringValue" =>
+             org.sireum.java.meta.StringValue(toStr(o.value.toSeq(1)._2))
+           case "ThrowsTypeAnnotation" =>
+             org.sireum.java.meta.ThrowsTypeAnnotation(toOption(o.value.toSeq(1)._2)(toJavaMeta[TypePath]), toJavaMeta[EntityAnnotation](o.value.toSeq(2)._2))
+           case "TrueValue" => org.sireum.java.meta.TrueValue
+           case "TypeArgument" =>
+             org.sireum.java.meta.TypeArgument(toInt(o.value.toSeq(1)._2))
+           case "TypePath" =>
+             org.sireum.java.meta.TypePath(toVector(o.value.toSeq(1)._2)(toJavaMeta[Step]))
+           case "TypeValue" =>
+             org.sireum.java.meta.TypeValue(toJavaMeta[Type](o.value.toSeq(1)._2))
+           case "VoidType" => org.sireum.java.meta.VoidType
            case "WildcardBound" => org.sireum.java.meta.WildcardBound
            case "_ObjectType" =>
-            org.sireum.java.meta._ObjectType(toStrIntern(o.value.toList(1)._2))
+             org.sireum.java.meta._ObjectType(toStrIntern(o.value.toSeq(1)._2))
          }).asInstanceOf[T]
     }
 }

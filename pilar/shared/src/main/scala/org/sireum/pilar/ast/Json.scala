@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2017, Robby, Kansas State University
+Copyright (c) 2019, Robby, Kansas State University
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -222,105 +222,59 @@ object Json {
       case o: Js.Obj =>
         (o.value.head._2.asInstanceOf[Js.Str].value match {
            case "Annotation" =>
-            org.sireum.pilar.ast.Annotation(toNode[Id](o.value.toList(1)._2), toNode[Lit](o.value.toList(2)._2))
+             org.sireum.pilar.ast.Annotation(toNode[Id](o.value.toSeq(1)._2), toNode[Lit](o.value.toSeq(2)._2))
            case "AssertAction" =>
-            org.sireum.pilar.ast.AssertAction(toNode[Exp](o.value.toList(1)._2), toVector(o.value.toList(2)._2)(toNode[Annotation]))
+             org.sireum.pilar.ast.AssertAction(toNode[Exp](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Annotation]))
            case "AssignAction" =>
-            org.sireum.pilar.ast.AssignAction(
-              toNode[Exp](o.value.toList(1)._2),
-              toNode[Exp](o.value.toList(2)._2),
-              toVector(o.value.toList(3)._2)(toNode[Annotation])
-            )
-          case "AssumeAction" =>
-            org.sireum.pilar.ast.AssumeAction(toNode[Exp](o.value.toList(1)._2), toVector(o.value.toList(2)._2)(toNode[Annotation]))
-          case "BlockLocation" =>
-            org.sireum.pilar.ast.BlockLocation(
-              toNode[Id](o.value.toList(1)._2),
-              toVector(o.value.toList(2)._2)(toNode[Action]),
-              toNode[Jump](o.value.toList(3)._2),
-              toVector(o.value.toList(4)._2)(toNode[Annotation])
-            )
-          case "CallLocation" =>
-            org.sireum.pilar.ast.CallLocation(
-              toNode[Id](o.value.toList(1)._2),
-              toOption(o.value.toList(2)._2)(toNode[Exp]),
-              toNode[Id](o.value.toList(3)._2),
-              toVector(o.value.toList(4)._2)(toNode[Exp]),
-              toNode[Id](o.value.toList(5)._2),
-              toVector(o.value.toList(6)._2)(toNode[Annotation])
-            )
-          case "ExtAction" =>
-            org.sireum.pilar.ast.ExtAction(
-              toNode[Id](o.value.toList(1)._2),
-              toVector(o.value.toList(2)._2)(toNode[Exp]),
-              toVector(o.value.toList(3)._2)(toNode[Annotation])
-            )
-          case "ExtExp" =>
-            org.sireum.pilar.ast.ExtExp(toNode[Exp](o.value.toList(1)._2), toVector(o.value.toList(2)._2)(toNode[Exp]))
-          case "ExtJump" =>
-            org.sireum.pilar.ast.ExtJump(
-              toNode[Id](o.value.toList(1)._2),
-              toVector(o.value.toList(2)._2)(toNode[Exp]),
-              toVector(o.value.toList(3)._2)(toNode[Annotation])
-            )
-          case "ExtLit" =>
-            org.sireum.pilar.ast.ExtLit(externMap("ExtLit")._2(toStr(o.value.toList(1)._2)))
-          case "GlobalVarDecl" =>
-            org.sireum.pilar.ast.GlobalVarDecl(toNode[Id](o.value.toList(1)._2), toVector(o.value.toList(2)._2)(toNode[Annotation]))
-          case "GotoJump" =>
-            org.sireum.pilar.ast.GotoJump(toNode[Id](o.value.toList(1)._2), toVector(o.value.toList(2)._2)(toNode[Annotation]))
-          case "IdExp" =>
-            org.sireum.pilar.ast.IdExp(toNode[Id](o.value.toList(1)._2))
-          case "IfJump" =>
-            org.sireum.pilar.ast.IfJump(
-              toNode[Exp](o.value.toList(1)._2),
-              toNode[Id](o.value.toList(2)._2),
-              toNode[Id](o.value.toList(3)._2),
-              toVector(o.value.toList(4)._2)(toNode[Annotation])
-            )
-          case "InfixExp" =>
-            org.sireum.pilar.ast.InfixExp(
-              toNode[Exp](o.value.toList(1)._2),
-              toNode[Id](o.value.toList(2)._2),
-              toNode[Exp](o.value.toList(3)._2),
-              toVector(o.value.toList(4)._2)(toTuple2)
-            )
-          case "LiteralExp" =>
-            org.sireum.pilar.ast.LiteralExp(toNode[Id](o.value.toList(1)._2), toNode[Lit](o.value.toList(2)._2))
-          case "LocalVarDecl" =>
-            org.sireum.pilar.ast.LocalVarDecl(toNode[Id](o.value.toList(1)._2), toVector(o.value.toList(2)._2)(toNode[Annotation]))
-          case "Model" =>
-            org.sireum.pilar.ast.Model(toVector(o.value.toList(1)._2)(toNode[ModelElement]), toVector(o.value.toList(2)._2)(toNode[Annotation]))
-          case "ParamDecl" =>
-            org.sireum.pilar.ast.ParamDecl(toNode[Id](o.value.toList(1)._2), toVector(o.value.toList(2)._2)(toNode[Annotation]))
-          case "ProcedureBody" =>
-            org.sireum.pilar.ast.ProcedureBody(
-              toVector(o.value.toList(1)._2)(toNode[LocalVarDecl]),
-              toVector(o.value.toList(2)._2)(toNode[Location])
-            )
-          case "ProcedureDecl" =>
-            org.sireum.pilar.ast.ProcedureDecl(
-              toNode[Id](o.value.toList(1)._2),
-              toVector(o.value.toList(2)._2)(toNode[ParamDecl]),
-              toOption(o.value.toList(3)._2)(toNode[ProcedureBody]),
-              toVector(o.value.toList(4)._2)(toNode[Annotation])
-            )
-          case "RawLit" =>
-            org.sireum.pilar.ast.RawLit(toStr(o.value.toList(1)._2))
-          case "ReturnJump" =>
-            org.sireum.pilar.ast.ReturnJump(toOption(o.value.toList(1)._2)(toNode[Exp]), toVector(o.value.toList(2)._2)(toNode[Annotation]))
-          case "SwitchCase" =>
-            org.sireum.pilar.ast.SwitchCase(toOption(o.value.toList(1)._2)(toNode[LiteralExp]), toNode[Id](o.value.toList(2)._2))
-          case "SwitchJump" =>
-            org.sireum.pilar.ast.SwitchJump(
-              toNode[Exp](o.value.toList(1)._2),
-              toVector(o.value.toList(2)._2)(toNode[SwitchCase]),
-              toVector(o.value.toList(3)._2)(toNode[Annotation])
-            )
-          case "TupleExp" =>
-            org.sireum.pilar.ast.TupleExp(toVector(o.value.toList(1)._2)(toNode[Exp]), toVector(o.value.toList(2)._2)(toNode[Annotation]))
+             org.sireum.pilar.ast.AssignAction(toNode[Exp](o.value.toSeq(1)._2), toNode[Exp](o.value.toSeq(2)._2), toVector(o.value.toSeq(3)._2)(toNode[Annotation]))
+           case "AssumeAction" =>
+             org.sireum.pilar.ast.AssumeAction(toNode[Exp](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Annotation]))
+           case "BlockLocation" =>
+             org.sireum.pilar.ast.BlockLocation(toNode[Id](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Action]), toNode[Jump](o.value.toSeq(3)._2), toVector(o.value.toSeq(4)._2)(toNode[Annotation]))
+           case "CallLocation" =>
+             org.sireum.pilar.ast.CallLocation(toNode[Id](o.value.toSeq(1)._2), toOption(o.value.toSeq(2)._2)(toNode[Exp]), toNode[Id](o.value.toSeq(3)._2), toVector(o.value.toSeq(4)._2)(toNode[Exp]), toNode[Id](o.value.toSeq(5)._2), toVector(o.value.toSeq(6)._2)(toNode[Annotation]))
+           case "ExtAction" =>
+             org.sireum.pilar.ast.ExtAction(toNode[Id](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Exp]), toVector(o.value.toSeq(3)._2)(toNode[Annotation]))
+           case "ExtExp" =>
+             org.sireum.pilar.ast.ExtExp(toNode[Exp](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Exp]))
+           case "ExtJump" =>
+             org.sireum.pilar.ast.ExtJump(toNode[Id](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Exp]), toVector(o.value.toSeq(3)._2)(toNode[Annotation]))
+           case "ExtLit" =>
+             org.sireum.pilar.ast.ExtLit(externMap("ExtLit")._2(toStr(o.value.toSeq(1)._2)))
+           case "GlobalVarDecl" =>
+             org.sireum.pilar.ast.GlobalVarDecl(toNode[Id](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Annotation]))
+           case "GotoJump" =>
+             org.sireum.pilar.ast.GotoJump(toNode[Id](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Annotation]))
+           case "IdExp" =>
+             org.sireum.pilar.ast.IdExp(toNode[Id](o.value.toSeq(1)._2))
+           case "IfJump" =>
+             org.sireum.pilar.ast.IfJump(toNode[Exp](o.value.toSeq(1)._2), toNode[Id](o.value.toSeq(2)._2), toNode[Id](o.value.toSeq(3)._2), toVector(o.value.toSeq(4)._2)(toNode[Annotation]))
+           case "InfixExp" =>
+             org.sireum.pilar.ast.InfixExp(toNode[Exp](o.value.toSeq(1)._2), toNode[Id](o.value.toSeq(2)._2), toNode[Exp](o.value.toSeq(3)._2), toVector(o.value.toSeq(4)._2)(toTuple2))
+           case "LiteralExp" =>
+             org.sireum.pilar.ast.LiteralExp(toNode[Id](o.value.toSeq(1)._2), toNode[Lit](o.value.toSeq(2)._2))
+           case "LocalVarDecl" =>
+             org.sireum.pilar.ast.LocalVarDecl(toNode[Id](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Annotation]))
+           case "Model" =>
+             org.sireum.pilar.ast.Model(toVector(o.value.toSeq(1)._2)(toNode[ModelElement]), toVector(o.value.toSeq(2)._2)(toNode[Annotation]))
+           case "ParamDecl" =>
+             org.sireum.pilar.ast.ParamDecl(toNode[Id](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[Annotation]))
+           case "ProcedureBody" =>
+             org.sireum.pilar.ast.ProcedureBody(toVector(o.value.toSeq(1)._2)(toNode[LocalVarDecl]), toVector(o.value.toSeq(2)._2)(toNode[Location]))
+           case "ProcedureDecl" =>
+             org.sireum.pilar.ast.ProcedureDecl(toNode[Id](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[ParamDecl]), toOption(o.value.toSeq(3)._2)(toNode[ProcedureBody]), toVector(o.value.toSeq(4)._2)(toNode[Annotation]))
+           case "RawLit" =>
+             org.sireum.pilar.ast.RawLit(toStr(o.value.toSeq(1)._2))
+           case "ReturnJump" =>
+             org.sireum.pilar.ast.ReturnJump(toOption(o.value.toSeq(1)._2)(toNode[Exp]), toVector(o.value.toSeq(2)._2)(toNode[Annotation]))
+           case "SwitchCase" =>
+             org.sireum.pilar.ast.SwitchCase(toOption(o.value.toSeq(1)._2)(toNode[LiteralExp]), toNode[Id](o.value.toSeq(2)._2))
+           case "SwitchJump" =>
+             org.sireum.pilar.ast.SwitchJump(toNode[Exp](o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toNode[SwitchCase]), toVector(o.value.toSeq(3)._2)(toNode[Annotation]))
+           case "TupleExp" =>
+             org.sireum.pilar.ast.TupleExp(toVector(o.value.toSeq(1)._2)(toNode[Exp]), toVector(o.value.toSeq(2)._2)(toNode[Annotation]))
            case "_Id" =>
-            org.sireum.pilar.ast._Id(toStrIntern(o.value.toList(1)._2))
+             org.sireum.pilar.ast._Id(toStrIntern(o.value.toSeq(1)._2))
          }).asInstanceOf[T]
     }
 }
