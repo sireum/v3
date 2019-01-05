@@ -26,7 +26,13 @@
 SCRIPT_HOME=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
 SIREUM_HOME=$( cd "$( dirname "$0" )"/.. &> /dev/null && pwd )
 /bin/bash ${SCRIPT_HOME}/sbt-launch.sh assembly
-SIREUM="${SIREUM_HOME}/platform/java/bin/java -jar ${SIREUM_HOME}/bin/sireum.jar"
+if [[ $(uname -s) == CYGWIN* ]]; then 
+  SIREUM_JAR=$( cygpath -C OEM -aw ${SIREUM_HOME}/bin/sireum.jar )
+  export SIREUM_HOME=$( cygpath -C OEM -aw ${SIREUM_HOME} ) 
+else
+  SIREUM_JAR=${SIREUM_HOME}/bin/sireum.jar
+fi
+SIREUM="${SIREUM_HOME}/platform/java/bin/java -cp ${SIREUM_JAR} org.Sireum"
 ${SIREUM} util reflect json -d ${SIREUM_HOME}/util/shared/src/main/scala -c org.sireum.util.TagJson -l ${SIREUM_HOME}/license.txt org.sireum.util.Tag
 ${SIREUM} util reflect rewriter -d ${SIREUM_HOME}/pilar/shared/src/main/scala -c org.sireum.pilar.ast.Rewriter -l ${SIREUM_HOME}/license.txt org.sireum.pilar.ast.Node
 ${SIREUM} util reflect json -d ${SIREUM_HOME}/pilar/shared/src/main/scala -c org.sireum.pilar.ast.Json -l ${SIREUM_HOME}/license.txt org.sireum.pilar.ast.Node
