@@ -341,7 +341,8 @@ lazy val awasShared = awasT._1
 lazy val awasJvm = awasT._2
 
 def getAwasJSDep(base : File) : Seq[AbstractJSDep] = {
-  if(((base/"src") ** "*.js").get().nonEmpty) {
+  val finder: PathFinder = (base / "src") ** "*.js"
+  if (finder.get.nonEmpty) {
     Seq(
       ProvidedJS / "min/jquery.js",
       ProvidedJS / "min/goldenlayout.js" dependsOn "min/jquery.js",
