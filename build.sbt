@@ -24,6 +24,7 @@
  */
 
 import ProjectInfo._
+import org.scalajs.sbtplugin.AbstractJSDep
 import org.scalajs.sbtplugin.cross.CrossProject
 import sbt.complete.Parsers.spaceDelimited
 import sbtassembly.AssemblyKeys.{assemblyMergeStrategy, assemblyOutputPath}
@@ -325,7 +326,9 @@ lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI
 lazy val cli = toSbtJvmProject(cliPI, sireumJvmSettings ++ commonSlangSettings)
 
 lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, airPI)
-lazy val awasT = toSbtCrossProject(awasPI, Seq(
+lazy val awasT = toSbtCrossProject(
+  awasPI,
+  slangSettings ++ Seq(
   Test / parallelExecution := false,
   libraryDependencies ++= Seq(
     "com.chuusai" %%% "shapeless" % "2.3.2",
@@ -336,7 +339,86 @@ lazy val awasT = toSbtCrossProject(awasPI, Seq(
 
 lazy val awasShared = awasT._1
 lazy val awasJvm = awasT._2
-lazy val awasJs = awasT._3.settings(webSettings: _*)
+
+def getAwasJSDep(base : File) : Seq[AbstractJSDep] = {
+  val finder: PathFinder = (base / "src") ** "*.js"
+  if (finder.get.nonEmpty) {
+    Seq(
+      ProvidedJS / "min/jquery.js",
+      ProvidedJS / "min/goldenlayout.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/viz.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/svg.panzoom.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/jquery.treetable.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/jquery.terminal.min.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/jquery.mousewheel-min.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/jquery.amaran.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/bulma-quickview.min.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/quickview.wrapper.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/jquery.tinycolorpicker.min.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/FileSaver.min.js"
+    )
+  } else {
+    Seq()
+  }
+}
+
+lazy val awasJs = {
+//  println("-------------"+baseDirectory.value.getPath)
+  awasT._3
+    .settings(webSettings: _*)
+    .settings(
+      jsDependencies ++= getAwasJSDep(baseDirectory.value),
+      skip in packageJSDependencies := false
+    )
+  }
+
+lazy val awasJarPI = new ProjectInfo("awas-jar", isCross = false, awasPI)
+
+val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting {
+  case PathList("transformed", _*) => MergeStrategy.discard
+  case PathList("Scratch.class") => MergeStrategy.discard
+  case PathList("Scratch$.class") => MergeStrategy.discard
+  case PathList("Scratch$delayedInit$body.class") => MergeStrategy.discard
+  case PathList("sh4d3", "scala", "meta", _*) => MergeStrategy.first
+  case PathList("org", "sireum", _*) =>
+    new MergeStrategy {
+      override def name: String = "sireum"
+
+      override def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
+        if (files.size == 1) return Right(Seq(files.head -> path))
+        val nonSharedFiles =
+          files.flatMap { f =>
+            val sourceDir = AssemblyUtils.sourceOfFileForMerge(tempDir, f)._1
+            if (sourceDir.getAbsolutePath.contains("/shared/")) None else Some(f)
+          }
+        Right(Seq(nonSharedFiles.head -> path))
+      }
+    }
+  case "module-info.class" => MergeStrategy.discard
+  case x =>
+    (assembly / assemblyMergeStrategy).value(x)
+
+}
+
+lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dependencies.map { p => ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt)
+  }: _*)
+  .settings(
+    assemblySettings ++ Seq(
+      assembly / logLevel := Level.Error,
+      assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false),
+      assemblyExcludedJars in assembly := {
+        val cp = (fullClasspath in assembly).value
+        cp filter { x =>
+          x.data.getName.contains("scalapb") ||
+            x.data.getName.contains("protobuf") ||
+            x.data.getName.contains("junit")
+        }
+    },
+    assembly / assemblyMergeStrategy := commonMergeStratergy.value,
+    skip in publish := true) :_*)
+
+lazy val awasPub = project.settings(name := "awas-pub",
+  packageBin in Compile := (assembly in (awasJar, Compile)).value)
 
 lazy val arsitPI =
   new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, airPI, cliPI)
@@ -425,35 +507,7 @@ lazy val sireumJvm =
             ShadeRule.rename("scalatags.**" -> "sh4d3.scalatags.@1").inAll,
             ShadeRule.rename("sourcecode.**" -> "sh4d3.sourcecode.@1").inAll
           ),
-          assembly / assemblyMergeStrategy := {
-            case PathList("transformed", _*) => MergeStrategy.discard
-            case PathList("Scratch.class") => MergeStrategy.discard
-            case PathList("Scratch$.class") => MergeStrategy.discard
-            case PathList("Scratch$delayedInit$body.class") => MergeStrategy.discard
-            case PathList("sh4d3", "scala", "meta", _*) => MergeStrategy.first
-            case PathList("org", "sireum", _*) =>
-              new MergeStrategy {
-                override def name: String = "sireum"
-
-                override def apply(
-                  tempDir: File,
-                  path: String,
-                  files: Seq[File]
-                ): Either[String, Seq[(File, String)]] = {
-                  if (files.size == 1) return Right(Seq(files.head -> path))
-                  val nonSharedFiles =
-                    files.flatMap { f =>
-                      val sourceDir = AssemblyUtils.sourceOfFileForMerge(tempDir, f)._1
-                      if (sourceDir.getAbsolutePath.contains("/shared/")) None else Some(f)
-                    }
-                  Right(Seq(nonSharedFiles.head -> path))
-                }
-              }
-            case "module-info.class" => MergeStrategy.discard
-            case x =>
-              val oldStrategy = (assembly / assemblyMergeStrategy).value
-              oldStrategy(x)
-          }
+          assembly / assemblyMergeStrategy := commonMergeStratergy.value
         ): _*
     )
     .aggregate(subProjectJvmReferences: _*)
