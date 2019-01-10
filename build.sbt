@@ -420,10 +420,6 @@ lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dep
 lazy val awasPub = project.settings(name := "awas-pub",
   packageBin in Compile := (assembly in (awasJar, Compile)).value)
 
-lazy val arsitPI =
-  new ProjectInfo("aadl/arsit", isCross = false, utilPI, testPI, airPI, cliPI)
-lazy val arsit = toSbtJvmProject(arsitPI, slangSettings)
-
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, airPI)
 lazy val minix = toSbtJvmProject(minixPI, slangSettings)
 
@@ -436,7 +432,6 @@ lazy val subProjectsJvm = Seq(
   cli,
   awasJvm,
   airJvm,
-  arsit,
   minix
 )
 

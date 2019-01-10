@@ -32,27 +32,10 @@ import org.sireum._
 object Sireum extends scala.App {
   System.exit(Cli(_root_.java.io.File.pathSeparatorChar).parseSireum(ISZ(args.map(s => s: String): _*), Z(0)) match {
     case Some(o: Cli.LogikaOption) => Logika.run(o)
-    case Some(o: Cli.ArsitOption) => arsitGen(o)
     case Some(o: Cli.AwasOption) => awasGen(o)
     case Some(_: Cli.HelpOption) => 0
     case _ => -1
   })
-
-  def arsitGen(o: Cli.ArsitOption): Int = {
-    try {
-      o.args.size match {
-        case z"0" => println(o.help); return 0
-        case _ =>
-      }
-      val cls = Class.forName("org.sireum.aadl.arsit.Runner")
-      val m = cls.getDeclaredMethod("run", classOf[Cli.ArsitOption])
-      m.invoke(null, o).asInstanceOf[Int]
-    } catch {
-      case _: Throwable =>
-        println(s"This feature is not available")
-        -1
-    }
-  }
 
   def awasGen(o: Cli.AwasOption): Int = {
     println(s"Coming soon!")
