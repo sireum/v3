@@ -382,7 +382,7 @@ lazy val java = toSbtJvmProject(javaPI)
 lazy val cliPI = new ProjectInfo("cli", isCross = false, utilPI, testPI, pilarPI, javaPI, logikaPI, toolsPI)
 lazy val cli = toSbtJvmProject(cliPI, sireumJvmSettings ++ commonSlangSettings)
 
-lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, airPI, macrosPI, libraryPI)
+lazy val awasPI = new ProjectInfo("awas", isCross = true, utilPI, testPI, airPI)
 lazy val awasT = toSbtCrossProject(
   awasPI,
   slangSettings ++ Seq(
