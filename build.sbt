@@ -24,6 +24,7 @@
  */
 
 import ProjectInfo._
+import org.scalajs.sbtplugin.AbstractJSDep
 import org.scalajs.sbtplugin.cross.CrossProject
 import sbt.complete.Parsers.spaceDelimited
 import sbtassembly.AssemblyKeys.{assemblyMergeStrategy, assemblyOutputPath}
@@ -396,8 +397,10 @@ lazy val awasT = toSbtCrossProject(
 
 lazy val awasShared = awasT._1
 lazy val awasJvm = awasT._2
-lazy val awasJs = awasT._3.settings(webSettings: _*).settings(
-    jsDependencies ++= Seq(
+
+def getAwasJSDep(base : File) : Seq[AbstractJSDep] = {
+  if(((base/"src") ** "*.js").get().nonEmpty) {
+    Seq(
       ProvidedJS / "min/jquery.js",
       ProvidedJS / "min/goldenlayout.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/viz.js" dependsOn "min/jquery.js",
@@ -410,9 +413,21 @@ lazy val awasJs = awasT._3.settings(webSettings: _*).settings(
       ProvidedJS / "min/quickview.wrapper.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/jquery.tinycolorpicker.min.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/FileSaver.min.js"
-    ),
-    skip in packageJSDependencies := false
-  )
+    )
+  } else {
+    Seq()
+  }
+}
+
+lazy val awasJs = {
+//  println("-------------"+baseDirectory.value.getPath)
+  awasT._3
+    .settings(webSettings: _*)
+    .settings(
+      jsDependencies ++= getAwasJSDep(baseDirectory.value),
+      skip in packageJSDependencies := false
+    )
+  }
 
 lazy val awasJarPI = new ProjectInfo("awas-jar", isCross = false, awasPI)
 
