@@ -354,7 +354,7 @@ def getAwasJSDep(base : File) : Seq[AbstractJSDep] = {
       ProvidedJS / "min/jquery.amaran.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/bulma-quickview.min.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/quickview.wrapper.js" dependsOn "min/jquery.js",
-      ProvidedJS / "min/jquery.tinycolorpicker.min.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/jquery.tinycolorpicker.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/FileSaver.min.js"
     )
   } else {
