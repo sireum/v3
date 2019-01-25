@@ -15,7 +15,7 @@
 
 Supported platforms (64-bit only):
 
-* macOS (test platform: [Sierra](https://www.apple.com/macos/sierra/) and [High Sierra](https://www.apple.com/macos/high-sierra/) -- 10.12 & 10.13)
+* macOS (test platform: 10.12 - 10.14)
 
 * Linux (test platform: [Ubuntu](http://www.ubuntu.com) 18.04)
 
