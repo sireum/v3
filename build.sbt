@@ -347,7 +347,7 @@ def getAwasJSDep(base : File) : Seq[AbstractJSDep] = {
       ProvidedJS / "min/jquery.js",
       ProvidedJS / "min/goldenlayout.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/viz.js" dependsOn "min/jquery.js",
-      ProvidedJS / "min/svg.panzoom.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/SVGPanZoom.min.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/jquery.treetable.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/jquery.terminal.min.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/jquery.mousewheel-min.js" dependsOn "min/jquery.js",
@@ -405,6 +405,7 @@ lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dep
   .settings(
     assemblySettings ++ Seq(
       assembly / logLevel := Level.Error,
+      assemblyJarName in assembly := "awas.jar",
       assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false),
       assemblyExcludedJars in assembly := {
         val cp = (fullClasspath in assembly).value
