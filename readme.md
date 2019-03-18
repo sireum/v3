@@ -33,7 +33,7 @@ The accompanying [Minisign](https://jedisct1.github.io/minisign/)
 digital signature can be verified using the following command:
 
 ```bash
-minisign -P RWSJrtRxSDlkZHXVldw0WXJvSfzaEsW9R6vxq0sVKDtbmgzQSb4uOwnu -Vm <file>
+minisign -P RWShRZe/1tMRHAcQ2162Wq5FhU2ptktJdQxzUxvK0MwVjDYRC4JY87Fb -Vm <file>
 ```
 
 Alternatively, you can use the following
