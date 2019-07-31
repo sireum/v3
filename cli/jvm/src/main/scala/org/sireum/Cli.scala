@@ -38,7 +38,7 @@ object Cli {
     new Cli(oPrintln, ePrintln).parseSireumOption(args, 0)
   }
 
-  private implicit class At[T](val a: CSeq[T]) extends AnyVal {
+  private implicit class CSeqAt[T](val a: CSeq[T]) extends AnyVal {
     def at(i: Int): scala.Option[T] =
       if (i < a.length) scala.Some(a(i)) else scala.None
   }

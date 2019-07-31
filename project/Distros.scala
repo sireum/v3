@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  lazy val ideaVer: String = if (isDev) "2018.3.3" else "2018.3.3"
+  lazy val ideaVer: String = if (isDev) "2019.2" else "2019.2"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -63,19 +63,17 @@ object Distros {
     "sireum" -> (if (isDev) 0 else 0),
     "sireum-injector" -> (if (isDev) 0 else 48443),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 53362 else 53362),
-    "markdown" -> (if (isDev) 53384 else 53384),
-    "asm" -> 41973,
-    "bash" -> (if (isDev) 53225 else 53225),
-    "python" -> (if (isDev) 53934 else 53934),
-    "antlr" -> 53413
+    "scala" -> (if (isDev) 65894 else 65894),
+    "markdown" -> (if (isDev) 66080 else 66080),
+    "asm" -> 65971,
+    "python" -> (if (isDev) 66012 else 66012),
+    "antlr" -> 64387
   ) ++ (if (isDev)
           Map(
-            "compare" -> 24991,
-            "rst" -> 51181,
+            "rst" -> 65370,
             "latex" -> 18476,
-            "gitextender" -> 41256,
-            "gittoolbox" -> 53141
+            "gitextender" -> 63981,
+            "gittoolbox" -> 66029
           )
         else Map())
 
@@ -83,11 +81,26 @@ object Distros {
     //"ignore" -> ("2.3.2", "https://github.com/hsz/idea-gitignore/releases/download/v2.3.2/idea-gitignore-2.3.2.zip")
   )
 
-  val ignoredIcons = Set("idea.icns",
-                         "idea-dev.icns",
-                         "idea.png",
-                         "idea-dev.png",
-                         "idea-dev.ico")
+  val ignoredIcons = Set(
+    "idea.icns",
+    "idea-dev.icns",
+    "idea.png",
+    "idea-dev.png",
+    "idea.svg",
+    "idea-dev.svg",
+    "idea-dev.ico",
+    "idea-ce.svg",
+    "idea-ce-eap.svg",
+    "idea-ce_16.svg",
+    "idea-ce-eap_16.svg",
+    "idea-ce_16@2x.svg",
+    "idea-ce-eap_16@2x.svg",
+    "icon_CE_256.png",
+    "icon_CE_256@2x.png",
+    "icon_CE_512.png",
+    "icon_CE_512@2x.png",
+    "idea_logo_background.png",
+  )
 
   val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
     (baseDir / 'distros / "idea64.exe").toIO.isFile

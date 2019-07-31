@@ -27,14 +27,11 @@ COMMANDS="rm mv git unzip wget bc"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
-ZULU_VERSION=11.2.3-jdk11.0.1
+ZULU_VERSION=8.40.0.25-ca-fx-jdk8.0.222
 SCALA_VERSION=2.12.8
 SBT_VERSION=1.2.8
-NODE_VERSION=11.6.0
-Z3_VERSION=4.8.4
-Z3_MAC_HASH=d6df51951f4c
-Z3_LINUX_HASH=d6df51951f4c
-Z3_WIN_HASH=d6df51951f4c
+NODE_VERSION=12.7.0
+Z3_VERSION=4.8.5
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
     PLATFORM=win
@@ -45,18 +42,18 @@ if [ -z "${PLATFORM}" ]; then
   fi
 fi
 if [ "${PLATFORM}" = "win"  ]; then
-  ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-win_x64.zip
+  ZULU_DROP_URL=https://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-win_x64.zip
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/win-x64/node.exe
-  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}.${Z3_WIN_HASH}-x64-win.zip
+  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/Z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-win.zip
 elif [ "${PLATFORM}" = "mac"  ]; then
-  ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-macosx_x64.zip
+  ZULU_DROP_URL=https://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-macosx_x64.tar.gz
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
-  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}.${Z3_MAC_HASH}-x64-osx-10.14.1.zip
+  Z3_DROP_URL=Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/Z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-osx-10.14.2.zip
 elif [ "${PLATFORM}" = "linux"  ]; then
   type -P xz &>/dev/null || { >&2 echo "xz command not found."; exit 1; }
-  ZULU_DROP_URL=http://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-linux_x64.tar.gz
+  ZULU_DROP_URL=https://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-linux_x64.tar.gz
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz
-  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}.${Z3_LINUX_HASH}-x64-ubuntu-14.04.zip
+  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/Z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-ubuntu-14.04.zip
 else
   >&2 echo "Sireum does not support: $(uname)."
   exit 1
