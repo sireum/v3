@@ -114,7 +114,7 @@ lazy val utestVersion = property("org.sireum.version.utest")
 
 lazy val nuprocessVersion = property("org.sireum.version.nuprocess")
 
-lazy val runtimeVersion = "d0c65786ac" // ghLatestCommit("sireum", "runtime", "master")
+lazy val runtimeVersion = "2f15888a16" // ghLatestCommit("sireum", "runtime", "master")
 
 val BUILD_FILENAME = "BUILD"
 
