@@ -37,14 +37,14 @@ object JavaMeta {
 
   val pickle: Any --\ String = {
     case o: JavaMeta =>
-      upickle.json.write(JavaMetaJson.fromJavaMeta(o))
+      ujson.write(JavaMetaJson.fromJavaMeta(o))
   }
 
   val unpickle = new PartialFunction[String, Any] {
     override def isDefinedAt(o: String): Boolean = true
 
     override def apply(o: String): Any =
-      JavaMetaJson.toJavaMeta(upickle.json.read(o))
+      JavaMetaJson.toJavaMeta(ujson.read(o))
   }
 
   @inline
