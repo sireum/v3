@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.pilar.ast
 
-import upickle.Js
 import org.sireum.util.Json._
 
 object Json {
@@ -39,44 +38,44 @@ object Json {
 
   import scala.language.implicitConversions
 
-  implicit def fromNode(o: org.sireum.pilar.ast.Node): Js.Obj =
+  implicit def fromNode(o: org.sireum.pilar.ast.Node): ujson.Obj =
     o match {
       case o: org.sireum.pilar.ast.Annotation =>
-        Js.Obj(
-          (".class", Js.Str("Annotation")),
+        ujson.Obj(
+          (".class", ujson.Str("Annotation")),
           ("id", fromNode(o.id)),
           ("lit", fromNode(o.lit))
         )
       case o: org.sireum.pilar.ast.AssertAction =>
-        Js.Obj(
-          (".class", Js.Str("AssertAction")),
+        ujson.Obj(
+          (".class", ujson.Str("AssertAction")),
           ("exp", fromNode(o.exp)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.AssignAction =>
-        Js.Obj(
-          (".class", Js.Str("AssignAction")),
+        ujson.Obj(
+          (".class", ujson.Str("AssignAction")),
           ("lhs", fromNode(o.lhs)),
           ("rhs", fromNode(o.rhs)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.AssumeAction =>
-        Js.Obj(
-          (".class", Js.Str("AssumeAction")),
+        ujson.Obj(
+          (".class", ujson.Str("AssumeAction")),
           ("exp", fromNode(o.exp)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.BlockLocation =>
-        Js.Obj(
-          (".class", Js.Str("BlockLocation")),
+        ujson.Obj(
+          (".class", ujson.Str("BlockLocation")),
           ("label", fromNode(o.label)),
           ("actions", fromSeq(o.actions)(fromNode)),
           ("jump", fromNode(o.jump)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.CallLocation =>
-        Js.Obj(
-          (".class", Js.Str("CallLocation")),
+        ujson.Obj(
+          (".class", ujson.Str("CallLocation")),
           ("label", fromNode(o.label)),
           ("lhsOpt", fromOption(o.lhsOpt)(fromNode)),
           ("id", fromNode(o.id)),
@@ -85,142 +84,142 @@ object Json {
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.ExtAction =>
-        Js.Obj(
-          (".class", Js.Str("ExtAction")),
+        ujson.Obj(
+          (".class", ujson.Str("ExtAction")),
           ("id", fromNode(o.id)),
           ("args", fromSeq(o.args)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.ExtExp =>
-        Js.Obj(
-          (".class", Js.Str("ExtExp")),
+        ujson.Obj(
+          (".class", ujson.Str("ExtExp")),
           ("exp", fromNode(o.exp)),
           ("args", fromSeq(o.args)(fromNode))
         )
       case o: org.sireum.pilar.ast.ExtJump =>
-        Js.Obj(
-          (".class", Js.Str("ExtJump")),
+        ujson.Obj(
+          (".class", ujson.Str("ExtJump")),
           ("id", fromNode(o.id)),
           ("args", fromSeq(o.args)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.ExtLit =>
-        Js.Obj(
-          (".class", Js.Str("ExtLit")),
+        ujson.Obj(
+          (".class", ujson.Str("ExtLit")),
           ("value", fromStr(externMap("ExtLit")._1(o.value)))
         )
       case o: org.sireum.pilar.ast.GlobalVarDecl =>
-        Js.Obj(
-          (".class", Js.Str("GlobalVarDecl")),
+        ujson.Obj(
+          (".class", ujson.Str("GlobalVarDecl")),
           ("id", fromNode(o.id)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.GotoJump =>
-        Js.Obj(
-          (".class", Js.Str("GotoJump")),
+        ujson.Obj(
+          (".class", ujson.Str("GotoJump")),
           ("target", fromNode(o.target)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.IdExp =>
-        Js.Obj(
-          (".class", Js.Str("IdExp")),
+        ujson.Obj(
+          (".class", ujson.Str("IdExp")),
           ("id", fromNode(o.id))
         )
       case o: org.sireum.pilar.ast.IfJump =>
-        Js.Obj(
-          (".class", Js.Str("IfJump")),
+        ujson.Obj(
+          (".class", ujson.Str("IfJump")),
           ("exp", fromNode(o.exp)),
           ("tTarget", fromNode(o.tTarget)),
           ("fTarget", fromNode(o.fTarget)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.InfixExp =>
-        Js.Obj(
-          (".class", Js.Str("InfixExp")),
+        ujson.Obj(
+          (".class", ujson.Str("InfixExp")),
           ("left", fromNode(o.left)),
           ("op", fromNode(o.op)),
           ("right", fromNode(o.right)),
           ("rest", fromSeq(o.rest)(fromTuple2))
         )
       case o: org.sireum.pilar.ast.LiteralExp =>
-        Js.Obj(
-          (".class", Js.Str("LiteralExp")),
+        ujson.Obj(
+          (".class", ujson.Str("LiteralExp")),
           ("id", fromNode(o.id)),
           ("lit", fromNode(o.lit))
         )
       case o: org.sireum.pilar.ast.LocalVarDecl =>
-        Js.Obj(
-          (".class", Js.Str("LocalVarDecl")),
+        ujson.Obj(
+          (".class", ujson.Str("LocalVarDecl")),
           ("id", fromNode(o.id)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.Model =>
-        Js.Obj(
-          (".class", Js.Str("Model")),
+        ujson.Obj(
+          (".class", ujson.Str("Model")),
           ("elements", fromSeq(o.elements)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.ParamDecl =>
-        Js.Obj(
-          (".class", Js.Str("ParamDecl")),
+        ujson.Obj(
+          (".class", ujson.Str("ParamDecl")),
           ("id", fromNode(o.id)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.ProcedureBody =>
-        Js.Obj(
-          (".class", Js.Str("ProcedureBody")),
+        ujson.Obj(
+          (".class", ujson.Str("ProcedureBody")),
           ("locals", fromSeq(o.locals)(fromNode)),
           ("locations", fromSeq(o.locations)(fromNode))
         )
       case o: org.sireum.pilar.ast.ProcedureDecl =>
-        Js.Obj(
-          (".class", Js.Str("ProcedureDecl")),
+        ujson.Obj(
+          (".class", ujson.Str("ProcedureDecl")),
           ("id", fromNode(o.id)),
           ("params", fromSeq(o.params)(fromNode)),
           ("bodyOpt", fromOption(o.bodyOpt)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.RawLit =>
-        Js.Obj(
-          (".class", Js.Str("RawLit")),
+        ujson.Obj(
+          (".class", ujson.Str("RawLit")),
           ("value", fromStr(o.value))
         )
       case o: org.sireum.pilar.ast.ReturnJump =>
-        Js.Obj(
-          (".class", Js.Str("ReturnJump")),
+        ujson.Obj(
+          (".class", ujson.Str("ReturnJump")),
           ("expOpt", fromOption(o.expOpt)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.SwitchCase =>
-        Js.Obj(
-          (".class", Js.Str("SwitchCase")),
+        ujson.Obj(
+          (".class", ujson.Str("SwitchCase")),
           ("expOpt", fromOption(o.expOpt)(fromNode)),
           ("target", fromNode(o.target))
         )
       case o: org.sireum.pilar.ast.SwitchJump =>
-        Js.Obj(
-          (".class", Js.Str("SwitchJump")),
+        ujson.Obj(
+          (".class", ujson.Str("SwitchJump")),
           ("exp", fromNode(o.exp)),
           ("cases", fromSeq(o.cases)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast.TupleExp =>
-        Js.Obj(
-          (".class", Js.Str("TupleExp")),
+        ujson.Obj(
+          (".class", ujson.Str("TupleExp")),
           ("exps", fromSeq(o.exps)(fromNode)),
           ("annotations", fromSeq(o.annotations)(fromNode))
         )
       case o: org.sireum.pilar.ast._Id =>
-        Js.Obj(
-          (".class", Js.Str("_Id")),
+        ujson.Obj(
+          (".class", ujson.Str("_Id")),
           ("value", fromStr(o.value))
         )
     }
 
-  implicit def toNode[T <: org.sireum.pilar.ast.Node](v: Js.Value): T =
+  implicit def toNode[T <: org.sireum.pilar.ast.Node](v: ujson.Value): T =
     (v: @unchecked) match {
-      case o: Js.Obj =>
-        (o.value.head._2.asInstanceOf[Js.Str].value match {
+      case o: ujson.Obj =>
+        (o.value.head._2.asInstanceOf[ujson.Str].value match {
            case "Annotation" =>
              org.sireum.pilar.ast.Annotation(toNode[Id](o.value.toSeq(1)._2), toNode[Lit](o.value.toSeq(2)._2))
            case "AssertAction" =>
