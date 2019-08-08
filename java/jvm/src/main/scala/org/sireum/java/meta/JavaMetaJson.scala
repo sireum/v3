@@ -28,62 +28,61 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.sireum.java.meta
 
-import upickle.Js
 import org.sireum.util.Json._
 
 object JavaMetaJson {
   import scala.language.implicitConversions
 
-  implicit def fromJavaMeta(o: org.sireum.java.meta.JavaMeta): Js.Obj =
+  implicit def fromJavaMeta(o: org.sireum.java.meta.JavaMeta): ujson.Obj =
     o match {
       case o: org.sireum.java.meta.Annotation =>
-        Js.Obj(
-          (".class", Js.Str("Annotation")),
+        ujson.Obj(
+          (".class", ujson.Str("Annotation")),
           ("tipe", fromStr(o.tipe)),
           ("args", fromSeq(o.args)(fromJavaMeta))
         )
       case o: org.sireum.java.meta.Arg =>
-        Js.Obj(
-          (".class", Js.Str("Arg")),
+        ujson.Obj(
+          (".class", ujson.Str("Arg")),
           ("name", fromStr(o.name)),
           ("value", fromJavaMeta(o.value))
         )
       case org.sireum.java.meta.ArrayElement =>
-        Js.Obj((".class", Js.Str("ArrayElement")))
+        ujson.Obj((".class", ujson.Str("ArrayElement")))
       case o: org.sireum.java.meta.ArrayType =>
-        Js.Obj(
-          (".class", Js.Str("ArrayType")),
+        ujson.Obj(
+          (".class", ujson.Str("ArrayType")),
           ("element", fromJavaMeta(o.element))
         )
       case o: org.sireum.java.meta.ArrayValue =>
-        Js.Obj(
-          (".class", Js.Str("ArrayValue")),
+        ujson.Obj(
+          (".class", ujson.Str("ArrayValue")),
           ("elements", fromSeq(o.elements)(fromJavaMeta))
         )
       case o: org.sireum.java.meta.Attribute =>
-        Js.Obj(
-          (".class", Js.Str("Attribute")),
+        ujson.Obj(
+          (".class", ujson.Str("Attribute")),
           ("tipe", fromStr(o.tipe)),
           ("value", fromByteArray(o.value))
         )
       case org.sireum.java.meta.BooleanType =>
-        Js.Obj((".class", Js.Str("BooleanType")))
+        ujson.Obj((".class", ujson.Str("BooleanType")))
       case org.sireum.java.meta.ByteType =>
-        Js.Obj((".class", Js.Str("ByteType")))
+        ujson.Obj((".class", ujson.Str("ByteType")))
       case o: org.sireum.java.meta.ByteValue =>
-        Js.Obj(
-          (".class", Js.Str("ByteValue")),
+        ujson.Obj(
+          (".class", ujson.Str("ByteValue")),
           ("value", fromAnyVal(o.value))
         )
       case o: org.sireum.java.meta.CastTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("CastTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("CastTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.Catch =>
-        Js.Obj(
-          (".class", Js.Str("Catch")),
+        ujson.Obj(
+          (".class", ujson.Str("Catch")),
           ("labelStart", fromStr(o.labelStart)),
           ("labelEnd", fromStr(o.labelEnd)),
           ("labelHandler", fromStr(o.labelHandler)),
@@ -91,15 +90,15 @@ object JavaMetaJson {
           ("annotations", fromSeq(o.annotations)(fromJavaMeta))
         )
       case org.sireum.java.meta.CharType =>
-        Js.Obj((".class", Js.Str("CharType")))
+        ujson.Obj((".class", ujson.Str("CharType")))
       case o: org.sireum.java.meta.CharValue =>
-        Js.Obj(
-          (".class", Js.Str("CharValue")),
+        ujson.Obj(
+          (".class", ujson.Str("CharValue")),
           ("value", fromAnyVal(o.value))
         )
       case o: org.sireum.java.meta.Class =>
-        Js.Obj(
-          (".class", Js.Str("Class")),
+        ujson.Obj(
+          (".class", ujson.Str("Class")),
           ("version", fromAnyVal(o.version)),
           ("modifiers", fromSeq(o.modifiers)(fromStr)),
           ("name", fromStr(o.name)),
@@ -117,71 +116,71 @@ object JavaMetaJson {
           ("methods", fromSeq(o.methods)(fromJavaMeta))
         )
       case o: org.sireum.java.meta.ClassExtendsTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("ClassExtendsTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("ClassExtendsTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.ClassTypeParameterBoundTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("ClassTypeParameterBoundTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("ClassTypeParameterBoundTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.ClassTypeParameterTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("ClassTypeParameterTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("ClassTypeParameterTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.ConstructorInvocationTypeArgumentTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("ConstructorInvocationTypeArgumentTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("ConstructorInvocationTypeArgumentTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.ConstructorReferenceTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("ConstructorReferenceTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("ConstructorReferenceTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.ConstructorReferenceTypeArgumentTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("ConstructorReferenceTypeArgumentTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("ConstructorReferenceTypeArgumentTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case org.sireum.java.meta.DoubleType =>
-        Js.Obj((".class", Js.Str("DoubleType")))
+        ujson.Obj((".class", ujson.Str("DoubleType")))
       case o: org.sireum.java.meta.DoubleValue =>
-        Js.Obj(
-          (".class", Js.Str("DoubleValue")),
+        ujson.Obj(
+          (".class", ujson.Str("DoubleValue")),
           ("value", fromAnyVal(o.value))
         )
       case o: org.sireum.java.meta.EntityAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("EntityAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("EntityAnnotation")),
           ("annotation", fromJavaMeta(o.annotation)),
           ("visible", fromAnyVal(o.visible))
         )
       case o: org.sireum.java.meta.EnumValue =>
-        Js.Obj(
-          (".class", Js.Str("EnumValue")),
+        ujson.Obj(
+          (".class", ujson.Str("EnumValue")),
           ("tipe", fromStr(o.tipe)),
           ("value", fromStr(o.value))
         )
       case o: org.sireum.java.meta.ExceptionParameterTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("ExceptionParameterTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("ExceptionParameterTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case org.sireum.java.meta.FalseValue =>
-        Js.Obj((".class", Js.Str("FalseValue")))
+        ujson.Obj((".class", ujson.Str("FalseValue")))
       case o: org.sireum.java.meta.Field =>
-        Js.Obj(
-          (".class", Js.Str("Field")),
+        ujson.Obj(
+          (".class", ujson.Str("Field")),
           ("modifiers", fromSeq(o.modifiers)(fromStr)),
           ("name", fromStr(o.name)),
           ("tipe", fromJavaMeta(o.tipe)),
@@ -192,92 +191,92 @@ object JavaMetaJson {
           ("attributes", fromSeq(o.attributes)(fromJavaMeta))
         )
       case o: org.sireum.java.meta.FieldTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("FieldTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("FieldTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case org.sireum.java.meta.FloatType =>
-        Js.Obj((".class", Js.Str("FloatType")))
+        ujson.Obj((".class", ujson.Str("FloatType")))
       case o: org.sireum.java.meta.FloatValue =>
-        Js.Obj(
-          (".class", Js.Str("FloatValue")),
+        ujson.Obj(
+          (".class", ujson.Str("FloatValue")),
           ("value", fromAnyVal(o.value))
         )
       case o: org.sireum.java.meta.GetFieldHandle =>
-        Js.Obj(
-          (".class", Js.Str("GetFieldHandle")),
+        ujson.Obj(
+          (".class", ujson.Str("GetFieldHandle")),
           ("className", fromStr(o.className)),
           ("name", fromStr(o.name)),
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case o: org.sireum.java.meta.GetStaticFieldHandle =>
-        Js.Obj(
-          (".class", Js.Str("GetStaticFieldHandle")),
+        ujson.Obj(
+          (".class", ujson.Str("GetStaticFieldHandle")),
           ("className", fromStr(o.className)),
           ("name", fromStr(o.name)),
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case o: org.sireum.java.meta.InnerClass =>
-        Js.Obj(
-          (".class", Js.Str("InnerClass")),
+        ujson.Obj(
+          (".class", ujson.Str("InnerClass")),
           ("name", fromStr(o.name)),
           ("outerNameOpt", fromOption(o.outerNameOpt)(fromStr)),
           ("innerNameOpt", fromOption(o.innerNameOpt)(fromStr)),
           ("modifiers", fromSeq(o.modifiers)(fromStr))
         )
       case org.sireum.java.meta.InnerType =>
-        Js.Obj((".class", Js.Str("InnerType")))
+        ujson.Obj((".class", ujson.Str("InnerType")))
       case o: org.sireum.java.meta.InstanceOfTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("InstanceOfTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("InstanceOfTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case org.sireum.java.meta.IntType =>
-        Js.Obj((".class", Js.Str("IntType")))
+        ujson.Obj((".class", ujson.Str("IntType")))
       case o: org.sireum.java.meta.IntValue =>
-        Js.Obj(
-          (".class", Js.Str("IntValue")),
+        ujson.Obj(
+          (".class", ujson.Str("IntValue")),
           ("value", fromAnyVal(o.value))
         )
       case o: org.sireum.java.meta.InvokeInterfaceHandle =>
-        Js.Obj(
-          (".class", Js.Str("InvokeInterfaceHandle")),
+        ujson.Obj(
+          (".class", ujson.Str("InvokeInterfaceHandle")),
           ("className", fromStr(o.className)),
           ("name", fromStr(o.name)),
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case o: org.sireum.java.meta.InvokeSpecialHandle =>
-        Js.Obj(
-          (".class", Js.Str("InvokeSpecialHandle")),
+        ujson.Obj(
+          (".class", ujson.Str("InvokeSpecialHandle")),
           ("className", fromStr(o.className)),
           ("name", fromStr(o.name)),
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case o: org.sireum.java.meta.InvokeStaticHandle =>
-        Js.Obj(
-          (".class", Js.Str("InvokeStaticHandle")),
+        ujson.Obj(
+          (".class", ujson.Str("InvokeStaticHandle")),
           ("className", fromStr(o.className)),
           ("name", fromStr(o.name)),
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case o: org.sireum.java.meta.InvokeVirtualHandle =>
-        Js.Obj(
-          (".class", Js.Str("InvokeVirtualHandle")),
+        ujson.Obj(
+          (".class", ujson.Str("InvokeVirtualHandle")),
           ("className", fromStr(o.className)),
           ("name", fromStr(o.name)),
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case o: org.sireum.java.meta.LocalVar =>
-        Js.Obj(
-          (".class", Js.Str("LocalVar")),
+        ujson.Obj(
+          (".class", ujson.Str("LocalVar")),
           ("name", fromStr(o.name)),
           ("tipe", fromJavaMeta(o.tipe)),
           ("signatureOpt", fromOption(o.signatureOpt)(fromStr)),
@@ -286,29 +285,29 @@ object JavaMetaJson {
           ("index", fromAnyVal(o.index))
         )
       case o: org.sireum.java.meta.LocalVarAnnotationElement =>
-        Js.Obj(
-          (".class", Js.Str("LocalVarAnnotationElement")),
+        ujson.Obj(
+          (".class", ujson.Str("LocalVarAnnotationElement")),
           ("labelStart", fromStr(o.labelStart)),
           ("labelEnd", fromStr(o.labelEnd)),
           ("index", fromAnyVal(o.index))
         )
       case o: org.sireum.java.meta.LocalVariableTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("LocalVariableTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("LocalVariableTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation)),
           ("elements", fromSeq(o.elements)(fromJavaMeta))
         )
       case org.sireum.java.meta.LongType =>
-        Js.Obj((".class", Js.Str("LongType")))
+        ujson.Obj((".class", ujson.Str("LongType")))
       case o: org.sireum.java.meta.LongValue =>
-        Js.Obj(
-          (".class", Js.Str("LongValue")),
+        ujson.Obj(
+          (".class", ujson.Str("LongValue")),
           ("value", fromAnyVal(o.value))
         )
       case o: org.sireum.java.meta.Method =>
-        Js.Obj(
-          (".class", Js.Str("Method")),
+        ujson.Obj(
+          (".class", ujson.Str("Method")),
           ("modifiers", fromSeq(o.modifiers)(fromStr)),
           ("name", fromStr(o.name)),
           ("tipe", fromJavaMeta(o.tipe)),
@@ -323,160 +322,160 @@ object JavaMetaJson {
           ("localVarTypeAnnotations", fromSeq(o.localVarTypeAnnotations)(fromJavaMeta))
         )
       case o: org.sireum.java.meta.MethodFormalParameterTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("MethodFormalParameterTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("MethodFormalParameterTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.MethodInvocationTypeArgumentTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("MethodInvocationTypeArgumentTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("MethodInvocationTypeArgumentTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.MethodReceiverTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("MethodReceiverTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("MethodReceiverTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.MethodReferenceTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("MethodReferenceTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("MethodReferenceTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.MethodReferenceTypeArgumentTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("MethodReferenceTypeArgumentTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("MethodReferenceTypeArgumentTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.MethodReturnTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("MethodReturnTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("MethodReturnTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.MethodType =>
-        Js.Obj(
-          (".class", Js.Str("MethodType")),
+        ujson.Obj(
+          (".class", ujson.Str("MethodType")),
           ("desc", fromStr(o.desc)),
           ("parameterTypes", fromSeq(o.parameterTypes)(fromJavaMeta)),
           ("returnType", fromJavaMeta(o.returnType))
         )
       case o: org.sireum.java.meta.MethodTypeParameterBoundTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("MethodTypeParameterBoundTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("MethodTypeParameterBoundTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.MethodTypeParameterTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("MethodTypeParameterTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("MethodTypeParameterTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.NewInvokeSpecialHandle =>
-        Js.Obj(
-          (".class", Js.Str("NewInvokeSpecialHandle")),
+        ujson.Obj(
+          (".class", ujson.Str("NewInvokeSpecialHandle")),
           ("className", fromStr(o.className)),
           ("name", fromStr(o.name)),
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case o: org.sireum.java.meta.NewTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("NewTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("NewTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case o: org.sireum.java.meta.OuterClass =>
-        Js.Obj(
-          (".class", Js.Str("OuterClass")),
+        ujson.Obj(
+          (".class", ujson.Str("OuterClass")),
           ("name", fromStr(o.name)),
           ("methodNameDescOpt", fromOption(o.methodNameDescOpt)(fromTuple2))
         )
       case o: org.sireum.java.meta.Parameter =>
-        Js.Obj(
-          (".class", Js.Str("Parameter")),
+        ujson.Obj(
+          (".class", ujson.Str("Parameter")),
           ("modifiers", fromSeq(o.modifiers)(fromStr)),
           ("nameOpt", fromOption(o.nameOpt)(fromStr)),
           ("annotations", fromSeq(o.annotations)(fromJavaMeta))
         )
       case o: org.sireum.java.meta.PutFieldHandle =>
-        Js.Obj(
-          (".class", Js.Str("PutFieldHandle")),
+        ujson.Obj(
+          (".class", ujson.Str("PutFieldHandle")),
           ("className", fromStr(o.className)),
           ("name", fromStr(o.name)),
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case o: org.sireum.java.meta.PutStaticFieldHandle =>
-        Js.Obj(
-          (".class", Js.Str("PutStaticFieldHandle")),
+        ujson.Obj(
+          (".class", ujson.Str("PutStaticFieldHandle")),
           ("className", fromStr(o.className)),
           ("name", fromStr(o.name)),
           ("desc", fromStr(o.desc)),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case o: org.sireum.java.meta.ResourceVariableTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("ResourceVariableTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("ResourceVariableTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation)),
           ("elements", fromSeq(o.elements)(fromJavaMeta))
         )
       case org.sireum.java.meta.ShortType =>
-        Js.Obj((".class", Js.Str("ShortType")))
+        ujson.Obj((".class", ujson.Str("ShortType")))
       case o: org.sireum.java.meta.ShortValue =>
-        Js.Obj(
-          (".class", Js.Str("ShortValue")),
+        ujson.Obj(
+          (".class", ujson.Str("ShortValue")),
           ("value", fromAnyVal(o.value))
         )
       case o: org.sireum.java.meta.StringValue =>
-        Js.Obj(
-          (".class", Js.Str("StringValue")),
+        ujson.Obj(
+          (".class", ujson.Str("StringValue")),
           ("value", fromStr(o.value))
         )
       case o: org.sireum.java.meta.ThrowsTypeAnnotation =>
-        Js.Obj(
-          (".class", Js.Str("ThrowsTypeAnnotation")),
+        ujson.Obj(
+          (".class", ujson.Str("ThrowsTypeAnnotation")),
           ("typePathOpt", fromOption(o.typePathOpt)(fromJavaMeta)),
           ("annotation", fromJavaMeta(o.annotation))
         )
       case org.sireum.java.meta.TrueValue =>
-        Js.Obj((".class", Js.Str("TrueValue")))
+        ujson.Obj((".class", ujson.Str("TrueValue")))
       case o: org.sireum.java.meta.TypeArgument =>
-        Js.Obj(
-          (".class", Js.Str("TypeArgument")),
+        ujson.Obj(
+          (".class", ujson.Str("TypeArgument")),
           ("index", fromAnyVal(o.index))
         )
       case o: org.sireum.java.meta.TypePath =>
-        Js.Obj(
-          (".class", Js.Str("TypePath")),
+        ujson.Obj(
+          (".class", ujson.Str("TypePath")),
           ("steps", fromSeq(o.steps)(fromJavaMeta))
         )
       case o: org.sireum.java.meta.TypeValue =>
-        Js.Obj(
-          (".class", Js.Str("TypeValue")),
+        ujson.Obj(
+          (".class", ujson.Str("TypeValue")),
           ("tipe", fromJavaMeta(o.tipe))
         )
       case org.sireum.java.meta.VoidType =>
-        Js.Obj((".class", Js.Str("VoidType")))
+        ujson.Obj((".class", ujson.Str("VoidType")))
       case org.sireum.java.meta.WildcardBound =>
-        Js.Obj((".class", Js.Str("WildcardBound")))
+        ujson.Obj((".class", ujson.Str("WildcardBound")))
       case o: org.sireum.java.meta._ObjectType =>
-        Js.Obj(
-          (".class", Js.Str("_ObjectType")),
+        ujson.Obj(
+          (".class", ujson.Str("_ObjectType")),
           ("name", fromStr(o.name))
         )
     }
 
-  implicit def toJavaMeta[T <: org.sireum.java.meta.JavaMeta](v: Js.Value): T =
+  implicit def toJavaMeta[T <: org.sireum.java.meta.JavaMeta](v: ujson.Value): T =
     (v: @unchecked) match {
-      case o: Js.Obj =>
-        (o.value.head._2.asInstanceOf[Js.Str].value match {
+      case o: ujson.Obj =>
+        (o.value.head._2.asInstanceOf[ujson.Str].value match {
            case "Annotation" =>
              org.sireum.java.meta.Annotation(toStr(o.value.toSeq(1)._2), toVector(o.value.toSeq(2)._2)(toJavaMeta[Arg]))
            case "Arg" =>

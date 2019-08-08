@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.sireum.pilar.ast
 
 import org.sireum.util._
-import upickle.Js
+
 
 object Pickling {
   final val locField = ".loc"
@@ -37,33 +37,33 @@ object Pickling {
       node match {
         case node: Model if node.nodeLocMap.nonEmpty =>
           val m = node.nodeLocMap
-          var locInfos = ivectorEmpty[Js.Arr]
+          var locInfos = ivectorEmpty[ujson.Arr]
           Visitor.build({
             case n: Node =>
               val info =
                 m.get(n) match {
                   case Some(li) => org.sireum.util.Json.fromLocationInfo(li)
-                  case _ => Js.Arr()
+                  case _ => ujson.Arr()
                 }
               locInfos = locInfos :+ info
               true
           })(node)
-          var temp = mlinkedMapEmpty[String, Js.Value]
-          temp ++= jsObj.value.toList :+ (locField, Js.Arr(locInfos: _*))
-          Js.Obj(temp)
+          var temp = mlinkedMapEmpty[String, ujson.Value]
+          temp ++= jsObj.value.toList :+ (locField, ujson.Arr(locInfos: _*))
+          ujson.Obj(temp)
         case _ => jsObj
       }
-    upickle.json.write(o)
+    ujson.write(o)
   }
 
   def unpickle[T <: Node](s: String): T = {
     val (v, locInfos) =
-      upickle.json.read(s) match {
-        case o: Js.Obj if
+      ujson.read(s) match {
+        case o: ujson.Obj if
         o.value.last._1 == locField &&
-          o.value.head._2.asInstanceOf[Js.Str].value == "Model" =>
-          val a = o.value.last._2.asInstanceOf[Js.Arr]
-          (Js.Obj(o.value.dropRight(1)),
+          o.value.head._2.asInstanceOf[ujson.Str].value == "Model" =>
+          val a = o.value.last._2.asInstanceOf[ujson.Arr]
+          (ujson.Obj(o.value.dropRight(1)),
             a.value.map(org.sireum.util.Json.toLocationInfo))
         case o => (o, ivectorEmpty)
       }
