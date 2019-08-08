@@ -48,7 +48,7 @@ lazy val properties = {
       if (sireumHome != null) {
         return checkFile(new File(sireumHome, "versions.properties"))
       }
-      sireumHome = System.getenv("SIREUM_HOME")
+      sireumHome = System.getenv("SIREUM_HOME") 
       if (sireumHome != null) {
         return checkFile(new File(sireumHome, "versions.properties"))
       }
@@ -362,10 +362,13 @@ def getAwasJSDep(base : File) : Seq[AbstractJSDep] = {
 
 lazy val awasJs = {
 //  println("-------------"+baseDirectory.value.getPath)
-  awasT._3
+  awasT._3.enablePlugins(ScalaJSBundlerPlugin)
     .settings(webSettings: _*)
     .settings(
       jsDependencies ++= getAwasJSDep(baseDirectory.value),
+      version in webpack := "4.8.1",
+      webpackBundlingMode := BundlingMode.LibraryAndApplication(),
+      //scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
       skip in packageJSDependencies := false
     )
   }
