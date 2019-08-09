@@ -376,6 +376,7 @@ lazy val awasJs = {
 lazy val awasJarPI = new ProjectInfo("awas-jar", isCross = false, awasPI)
 
 val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting {
+  case PathList("scalac-plugin.xml") => MergeStrategy.discard
   case PathList("transformed", _*) => MergeStrategy.discard
   case PathList("Scratch.class") => MergeStrategy.discard
   case PathList("Scratch$.class") => MergeStrategy.discard
