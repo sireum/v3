@@ -28,9 +28,9 @@ for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
 ZULU_VERSION=11.33.15-ca-fx-jdk11.0.4
-SCALA_VERSION=2.12.8
+SCALA_VERSION=2.12.10
 SBT_VERSION=1.2.8
-NODE_VERSION=12.7.0
+NODE_VERSION=12.10.0
 Z3_VERSION=4.8.5
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
