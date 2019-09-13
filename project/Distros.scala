@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  lazy val ideaVer: String = if (isDev) "2019.2" else "2019.2"
+  lazy val ideaVer: String = if (isDev) "2019.2.2" else "2019.2.2"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -61,19 +61,18 @@ object Distros {
 
   lazy val pluginUpdateIdMap: Map[String, Int] = Map(
     "sireum" -> (if (isDev) 0 else 0),
-    "sireum-injector" -> (if (isDev) 0 else 48443),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 65894 else 65894),
+    "scala" -> (if (isDev) 68163 else 68163),
     "markdown" -> (if (isDev) 66080 else 66080),
     "asm" -> 65971,
-    "python" -> (if (isDev) 66012 else 66012),
+    "python" -> (if (isDev) 68212 else 68212),
     "antlr" -> 64387
   ) ++ (if (isDev)
           Map(
-            "rst" -> 65370,
+            "rst" -> 66963,
             "latex" -> 18476,
             "gitextender" -> 63981,
-            "gittoolbox" -> 66029
+            "gittoolbox" -> 68242
           )
         else Map())
 
