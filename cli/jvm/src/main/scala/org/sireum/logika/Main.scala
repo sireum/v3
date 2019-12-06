@@ -471,11 +471,11 @@ class Main(option: LogikaOption,
       proofs.size match {
         case 1 =>
           val programPath = new File(option.input.head).getCanonicalPath
-          %(scalaScript, "-nowarn", "-cp", sireumJar, programPath,
+          %(scalaScript, "-nowarn", "-howtorun:script", "-cp", sireumJar, programPath,
             JAVA_HOME = javaHome, SCALA_HOME = scalaHome)(pwd)
         case _ =>
           val programText = proofs.map(_.content).mkString(scala.util.Properties.lineSeparator)
-          %(scalaScript, "-nowarn", "-cp", sireumJar, "-e", programText,
+          %(scalaScript, "-nowarn", "-howtorun:script", "-cp", sireumJar, "-e", programText,
             JAVA_HOME = javaHome, SCALA_HOME = scalaHome)(pwd)
       }
       sys.exit
