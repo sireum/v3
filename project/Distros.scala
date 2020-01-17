@@ -65,7 +65,7 @@ object Distros {
     "scala" -> (if (isDev) 75234 else 75234),
     "markdown" -> (if (isDev) 72848 else 72848),
     "asm" -> 65971,
-    "python" -> (if (isDev) 75212 else 75212),
+    "python" -> (if (isDev) 74951 else 74951),
     "antlr" -> 72968
   ) ++ (if (isDev)
           Map(
