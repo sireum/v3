@@ -463,11 +463,11 @@ object Logika {
       proofs.size match {
         case 1 =>
           val programPath = new File(option.args.elements.head).getCanonicalPath
-          %(scalaScript, "-nc", "-nowarn", "-cp", sireumJar, programPath,
+          %(scalaScript, "-nc", "-nowarn", "-howtorun:script", "-cp", sireumJar, programPath,
             JAVA_HOME = javaHome, SCALA_HOME = scalaHome)(pwd)
         case _ =>
           val programText = proofs.map(_.content).mkString(scala.util.Properties.lineSeparator)
-          %(scalaScript, "-nc", "-nowarn", "-cp", sireumJar, "-e", programText,
+          %(scalaScript, "-nc", "-nowarn", "-howtorun:script", "-cp", sireumJar, "-e", programText,
             JAVA_HOME = javaHome, SCALA_HOME = scalaHome)(pwd)
       }
       sys.exit
