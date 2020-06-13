@@ -112,8 +112,6 @@ lazy val junitInterfaceVersion = property("org.sireum.version.junit-interface")
 
 lazy val utestVersion = property("org.sireum.version.utest")
 
-lazy val nuprocessVersion = property("org.sireum.version.nuprocess")
-
 lazy val runtimeVersion = "2f15888a16" // ghLatestCommit("sireum", "runtime", "master")
 
 val BUILD_FILENAME = "BUILD"
@@ -170,7 +168,6 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scala-lang.modules" %% "scala-java8-compat" % java8CompatVersion,
     "org.antlr" % "antlr4-runtime" % antlrRuntimeVersion,
-    "com.zaxxer" % "nuprocess" % nuprocessVersion,
     "org.antlr" % "ST4" % stVersion,
     "org.yaml" % "snakeyaml" % snakeYamlVersion,
     "org.ow2.asm" % "asm" % asmVersion,
@@ -480,7 +477,6 @@ lazy val sireumJvm =
             ShadeRule.rename("com.novocode.**" -> "sh4d3.com.novocode.@1").inAll,
             ShadeRule.rename("com.sksamuel.**" -> "sh4d3.com.sksamuel.@1").inAll,
             ShadeRule.rename("com.trueaccord.**" -> "sh4d3.com.trueaccord.@1").inAll,
-            ShadeRule.rename("com.zaxxer.**" -> "sh4d3.com.zaxxer.@1").inAll,
             ShadeRule.rename("fastparse.**" -> "sh4d3.fastparse.@1").inAll,
             ShadeRule.rename("google.**" -> "sh4d3.google.@1").inAll,
             ShadeRule.rename("org.langmeta.**" -> "sh4d3.org.langmeta.@1").inAll,
