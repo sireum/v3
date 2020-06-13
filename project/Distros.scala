@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  lazy val ideaVer: String = if (isDev) "2019.3.1" else "2019.3.1"
+  lazy val ideaVer: String = if (isDev) "2020.1.2" else "2020.1.2"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -62,14 +62,14 @@ object Distros {
   lazy val pluginUpdateIdMap: Map[String, Int] = Map(
     "sireum" -> (if (isDev) 0 else 0),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 75234 else 75234),
-    "markdown" -> (if (isDev) 72848 else 72848),
+    "scala" -> (if (isDev) 86571 else 86571),
+    "markdown" -> (if (isDev) 85222 else 85222),
     "asm" -> 65971,
-    "python" -> (if (isDev) 74951 else 74951),
-    "antlr" -> 72968
+    "antlr" -> 80188
   ) ++ (if (isDev)
           Map(
-            "rst" -> 74935,
+            "python" -> (if (isDev) 88054 else 88054),
+            "rst" -> 82408,
             "latex" -> 18476
           )
         else Map())
@@ -246,10 +246,11 @@ object Distros {
   }
 
   def patchIconExe(filePath: Path): Unit = {
-    require(hasExes)
-    print(s"Replacing $filePath ... ")
-    %%('cp, pwd / 'distros / filePath.last, filePath)
-    println("done!")
+    if (hasExes) {
+      print(s"Replacing $filePath ... ")
+      %%('cp, pwd / 'distros / filePath.last, filePath)
+      println("done!")
+    }
   }
 
   def patchIcon(platform: String, path: Path): Unit = {
