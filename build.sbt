@@ -561,7 +561,7 @@ lazy val sireum = Project(id = "sireum", base = file("."))
         touche(slangFile)
       },
       initialize := {
-        val required = Set("1.8", "9", "10", "11")
+        val required = Set("1.8", "9", "10", "11", "14")
         val current = sys.props("java.specification.version")
         assert(required.contains(current), s"Unsupported Java version: $current (required: $required)")
       },
