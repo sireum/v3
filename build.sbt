@@ -382,6 +382,7 @@ val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting 
   case PathList("Scratch$.class") => MergeStrategy.discard
   case PathList("Scratch$delayedInit$body.class") => MergeStrategy.discard
   case PathList("sh4d3", "scala", "meta", _*) => MergeStrategy.first
+  case PathList("scala-collection-compat.properties") => MergeStrategy.first
   case PathList("org", "sireum", _*) =>
     new MergeStrategy {
       override def name: String = "sireum"
@@ -503,7 +504,13 @@ lazy val sireumJvm =
             ShadeRule.rename("geny.**" -> "sh4d3.geny.@1").inAll,
             ShadeRule.rename("ammonite.**" -> "sh4d3.ammonite.@1").inAll,
             ShadeRule.rename("scalatags.**" -> "sh4d3.scalatags.@1").inAll,
-            ShadeRule.rename("sourcecode.**" -> "sh4d3.sourcecode.@1").inAll
+            ShadeRule.rename("sourcecode.**" -> "sh4d3.sourcecode.@1").inAll,
+            ShadeRule.rename("upack.**" -> "sh4d3.upack.@1").inAll,
+            ShadeRule.rename("ujson.**" -> "sh4d3.ujson.@1").inAll,
+            ShadeRule.rename("shapeless.**" -> "sh4d3.shapeless.@1").inAll,
+            ShadeRule.rename("os.**" -> "sh4d3.os.@1").inAll,
+            ShadeRule.rename("org.parboiled2.**" -> "sh4d3.org.parboiled2.@1").inAll,
+            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll,
           ),
           assembly / assemblyMergeStrategy := commonMergeStratergy.value
         ): _*
