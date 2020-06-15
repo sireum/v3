@@ -112,8 +112,6 @@ lazy val junitInterfaceVersion = property("org.sireum.version.junit-interface")
 
 lazy val utestVersion = property("org.sireum.version.utest")
 
-lazy val nuprocessVersion = property("org.sireum.version.nuprocess")
-
 lazy val runtimeVersion = "2f15888a16" // ghLatestCommit("sireum", "runtime", "master")
 
 val BUILD_FILENAME = "BUILD"
@@ -170,7 +168,6 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scala-lang.modules" %% "scala-java8-compat" % java8CompatVersion,
     "org.antlr" % "antlr4-runtime" % antlrRuntimeVersion,
-    "com.zaxxer" % "nuprocess" % nuprocessVersion,
     "org.antlr" % "ST4" % stVersion,
     "org.yaml" % "snakeyaml" % snakeYamlVersion,
     "org.ow2.asm" % "asm" % asmVersion,
@@ -382,6 +379,7 @@ val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting 
   case PathList("Scratch$.class") => MergeStrategy.discard
   case PathList("Scratch$delayedInit$body.class") => MergeStrategy.discard
   case PathList("sh4d3", "scala", "meta", _*) => MergeStrategy.first
+  case PathList("scala-collection-compat.properties") => MergeStrategy.first
   case PathList("org", "sireum", _*) =>
     new MergeStrategy {
       override def name: String = "sireum"
@@ -479,7 +477,6 @@ lazy val sireumJvm =
             ShadeRule.rename("com.novocode.**" -> "sh4d3.com.novocode.@1").inAll,
             ShadeRule.rename("com.sksamuel.**" -> "sh4d3.com.sksamuel.@1").inAll,
             ShadeRule.rename("com.trueaccord.**" -> "sh4d3.com.trueaccord.@1").inAll,
-            ShadeRule.rename("com.zaxxer.**" -> "sh4d3.com.zaxxer.@1").inAll,
             ShadeRule.rename("fastparse.**" -> "sh4d3.fastparse.@1").inAll,
             ShadeRule.rename("google.**" -> "sh4d3.google.@1").inAll,
             ShadeRule.rename("org.langmeta.**" -> "sh4d3.org.langmeta.@1").inAll,
@@ -503,7 +500,13 @@ lazy val sireumJvm =
             ShadeRule.rename("geny.**" -> "sh4d3.geny.@1").inAll,
             ShadeRule.rename("ammonite.**" -> "sh4d3.ammonite.@1").inAll,
             ShadeRule.rename("scalatags.**" -> "sh4d3.scalatags.@1").inAll,
-            ShadeRule.rename("sourcecode.**" -> "sh4d3.sourcecode.@1").inAll
+            ShadeRule.rename("sourcecode.**" -> "sh4d3.sourcecode.@1").inAll,
+            ShadeRule.rename("upack.**" -> "sh4d3.upack.@1").inAll,
+            ShadeRule.rename("ujson.**" -> "sh4d3.ujson.@1").inAll,
+            ShadeRule.rename("shapeless.**" -> "sh4d3.shapeless.@1").inAll,
+            ShadeRule.rename("os.**" -> "sh4d3.os.@1").inAll,
+            ShadeRule.rename("org.parboiled2.**" -> "sh4d3.org.parboiled2.@1").inAll,
+            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll,
           ),
           assembly / assemblyMergeStrategy := commonMergeStratergy.value
         ): _*
@@ -561,7 +564,7 @@ lazy val sireum = Project(id = "sireum", base = file("."))
         touche(slangFile)
       },
       initialize := {
-        val required = Set("1.8", "9", "10", "11")
+        val required = Set("1.8", "9", "10", "11", "14")
         val current = sys.props("java.specification.version")
         assert(required.contains(current), s"Unsupported Java version: $current (required: $required)")
       },
