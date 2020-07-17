@@ -24,12 +24,13 @@
  */
 
 import ProjectInfo._
-import org.scalajs.sbtplugin.AbstractJSDep
-import org.scalajs.sbtplugin.cross.CrossProject
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.complete.Parsers.spaceDelimited
 import sbtassembly.AssemblyKeys.{assemblyMergeStrategy, assemblyOutputPath}
 import sbtassembly.{AssemblyUtils, MergeStrategy}
 import sbtassembly.AssemblyPlugin._
+import org.scalajs.jsdependencies.sbtplugin.AbstractJSDep
+import sbt.Project
 
 val isRelease = System.getenv("SIREUM_RELEASE") != null
 
@@ -112,7 +113,7 @@ lazy val junitInterfaceVersion = property("org.sireum.version.junit-interface")
 
 lazy val utestVersion = property("org.sireum.version.utest")
 
-lazy val runtimeVersion = "2f15888a16" // ghLatestCommit("sireum", "runtime", "master")
+lazy val runtimeVersion = "0b83a7bcaf" // ghLatestCommit("sireum", "runtime", "master")
 
 val BUILD_FILENAME = "BUILD"
 
@@ -184,7 +185,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
 
 lazy val sireumJsSettings = sireumSharedSettings ++ Seq(
   scalacOptions ++= Seq("-feature"),
-  relativeSourceMaps := true,
+  //relativeSourceMaps := true,
   Global / scalaJSStage := (if (isRelease) FullOptStage else FastOptStage),
   libraryDependencies ++= Seq("org.scala-lang" % "scala-reflect" % scalaVer, "com.lihaoyi" %%% "utest" % utestVersion),
   testFrameworks += new TestFramework("utest.runner.Framework")
@@ -205,11 +206,11 @@ lazy val webSettings = sireumSettings ++ Seq(
 
 lazy val commonSlangSettings = Seq(
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
-  libraryDependencies += "org.sireum.runtime" %%% "library" % runtimeVersion)
+  libraryDependencies += "org.sireum.kekinian" %%% "library" % runtimeVersion)
 
 lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(
   scalacOptions ++= Seq("-Yrangepos"),
-  libraryDependencies += "org.sireum.runtime" %%% "test" % runtimeVersion % "test")
+  libraryDependencies += "org.sireum.kekinian" %%% "test" % runtimeVersion % "test")
 
 val depOpt = Some("test->test;compile->compile;test->compile")
 
@@ -239,11 +240,16 @@ def toSbtCrossProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Vector())
       ClasspathDependency(LocalProject(p.id), depOpt)
     }: _*)
     .disablePlugins(AssemblyPlugin)
-  val cp = CrossProject(jvmId = pi.id + "-jvm", jsId = pi.id + "-js", base = pi.baseDir, crossType = CrossType.Full)
+  val cp = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Full)
+    .in(file("."))
     .settings(name := pi.id)
+    .jvmConfigure((it: sbt.Project) => { it.withId( pi.id + "-jvm").in(pi.baseDir/"jvm")})
+    .jsConfigure(_.withId(pi.id + "-js").in(pi.baseDir/"js"))
+    .jsConfigure(_.enablePlugins(JSDependenciesPlugin))
   val jvm =
     cp.jvm
       .settings(sireumJvmSettings ++ settings)
+      .settings(name := pi.id + "-jvm")
       .disablePlugins(AssemblyPlugin)
       .dependsOn(shared % depOpt.get)
       .dependsOn(pi.dependencies.map { p =>
@@ -263,7 +269,6 @@ def toSbtCrossProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = Vector())
       .dependsOn(pi.dependencies.map { p =>
         ClasspathDependency(LocalProject(p.id + "-js"), depOpt)
       }: _*)
-      .enablePlugins(ScalaJSPlugin)
   (shared, jvm, js)
 }
 
@@ -296,7 +301,7 @@ lazy val logikaJvm = logikaT._2
       logikaT._2.base / "c-runtime" / "src",
       logikaT._2.base / "c-runtime" / "cmake"
     ),
-    libraryDependencies += "org.sireum.runtime" %% "library" % runtimeVersion
+    libraryDependencies += "org.sireum.kekinian" %% "library" % runtimeVersion
   )
 lazy val logikaJs = logikaT._3
 
@@ -326,7 +331,7 @@ lazy val awasT = toSbtCrossProject(
   slangSettings ++ Seq(
   Test / parallelExecution := false,
   libraryDependencies ++= Seq(
-    "com.chuusai" %%% "shapeless" % "2.3.2",
+    "com.chuusai" %%% "shapeless" % "2.3.3",
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
     "org.parboiled" %%% "parboiled" % parboiled2Version,
     "org.scala-lang.modules" %% "scala-async" % "0.9.7"
@@ -359,7 +364,7 @@ def getAwasJSDep(base : File) : Seq[AbstractJSDep] = {
 
 lazy val awasJs = {
 //  println("-------------"+baseDirectory.value.getPath)
-  awasT._3.enablePlugins(ScalaJSBundlerPlugin)
+  awasT._3.enablePlugins(ScalaJSBundlerPlugin).enablePlugins(JSDependenciesPlugin)
     .settings(webSettings: _*)
     .settings(
       jsDependencies ++= getAwasJSDep(baseDirectory.value),
