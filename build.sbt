@@ -91,6 +91,8 @@ lazy val scalaTagsVersion = property("org.sireum.version.scalatags")
 
 lazy val parboiled2Version = property("org.sireum.version.parboiled2")
 
+lazy val shapelessVersion = property("org.sireum.version.shapeless")
+
 lazy val asmVersion = property("org.sireum.version.asm")
 
 lazy val jgraphtVersion = property("org.sireum.version.jgrapht")
@@ -331,7 +333,7 @@ lazy val awasT = toSbtCrossProject(
   slangSettings ++ Seq(
   Test / parallelExecution := false,
   libraryDependencies ++= Seq(
-    "com.chuusai" %%% "shapeless" % "2.3.3",
+    "com.chuusai" %%% "shapeless" % shapelessVersion,
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
     "org.parboiled" %%% "parboiled" % parboiled2Version,
     "org.scala-lang.modules" %% "scala-async" % "0.9.7"
