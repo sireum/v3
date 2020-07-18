@@ -1,9 +1,9 @@
 # Sireum: A Software Analysis Platform (v3)
 
-| Branch | macOS | Linux | Windows |  
-| :----: | :---: | :---: | :---: | 
-| release | [![Travis CI Status](https://travis-ci.org/sireum/v3.svg?branch=release)](https://travis-ci.org/sireum/v3) | [![Shippable Status](https://api.shippable.com/projects/569e46641895ca44747022a7/badge?branch=release)](https://app.shippable.com/projects/569e46641895ca44747022a7) | [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/qtkk5xjok78ah46x/branch/release?svg=true)](https://ci.appveyor.com/project/robby-phd/v3/branch/release) |
-| master | [![Travis CI Status](https://travis-ci.org/sireum/v3.svg?branch=master)](https://travis-ci.org/sireum/v3) | [![Shippable Status](https://api.shippable.com/projects/569e46641895ca44747022a7/badge?branch=master)](https://app.shippable.com/projects/569e46641895ca44747022a7) | [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/qtkk5xjok78ah46x/branch/master?svg=true)](https://ci.appveyor.com/project/robby-phd/v3/branch/master) |
+| Branch | CI |  
+| :----: | :---: | 
+| release | ![CI](https://github.com/sireum/v3/workflows/CI/badge.svg?branch=release) |
+| master | ![CI](https://github.com/sireum/v3/workflows/CI/badge.svg?branch=master) |
 
 [Simplified BSD License](license.md)
 
