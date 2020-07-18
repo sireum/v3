@@ -1,0 +1,155 @@
+name: CI
+
+on: [push]
+
+jobs:
+
+  ci-ubuntu:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[skip action]')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set env.workspace
+        run: echo "::set-env name=workspace::$GITHUB_WORKSPACE"
+      - name: Cache Java
+        id: cache-java
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/java
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-java
+      - name: Cache Z3
+        id: cache-z3
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/apps/z3
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-z3
+      - name: Cache Scala
+        id: cache-scala
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/scala
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-scala
+      - name: Cache Node
+        id: cache-node
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/node
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-node
+      - name: Cache sbt
+        id: cache-sbt
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/sbt
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-sbt
+      - name: Test
+        run: |
+          cd $GITHUB_WORKSPACE
+          git submodule update --init --recursive
+          bin/sbt-launch.sh clean test:compile test:fastOptJS
+          SIREUM_PARALLEL_BUILD=false bin/sbt-launch.sh 'project sireum-jvm' test
+
+  ci-mac:
+    runs-on: macOS-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[skip action]')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set env.workspace
+        run: echo "::set-env name=workspace::$GITHUB_WORKSPACE"
+      - name: Cache Java
+        id: cache-java
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/java
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-java
+      - name: Cache Z3
+        id: cache-z3
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/apps/z3
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-z3
+      - name: Cache Scala
+        id: cache-scala
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/scala
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-scala
+      - name: Cache Node
+        id: cache-node
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/node
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-node
+      - name: Cache sbt
+        id: cache-sbt
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/sbt
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-sbt
+      - name: Test
+        run: |
+          cd $GITHUB_WORKSPACE
+          git submodule update --init --recursive
+          bin/sbt-launch.sh clean test:compile test:fastOptJS
+          SIREUM_PARALLEL_BUILD=false bin/sbt-launch.sh 'project sireum-jvm' test
+
+  ci-windows:
+    runs-on: windows-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[skip action]')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set env.workspace
+        run: echo "::set-env name=workspace::$($env:GITHUB_WORKSPACE)"
+      - name: Install Cygwin
+        shell: cmd
+        run: |
+          choco config get cacheLocation
+          choco install --no-progress cygwin
+          C:\tools\cygwin\cygwinsetup.exe -qgnNdO -R C:/tools/cygwin -s http://mirrors.kernel.org/sourceware/cygwin/ -P bc,unzip,wget
+      - name: Cache Java
+        id: cache-java
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/java
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-java
+      - name: Cache Z3
+        id: cache-z3
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/apps/z3
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-z3
+      - name: Cache Scala
+        id: cache-scala
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/scala
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-scala
+      - name: Cache Node
+        id: cache-node
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/node
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-node
+      - name: Cache sbt
+        id: cache-sbt
+        uses: actions/cache@v1
+        with:
+          path: ${{ env.workspace }}/platform/sbt
+          key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-sbt
+      - name: Test
+        shell: cmd
+        run: |
+          set PATH=C:\tools\cygwin\bin;C:\tools\cygwin\usr\bin;%PATH%
+          cd /d %GITHUB_WORKSPACE%
+          git submodule update --init --recursive
+          bash -lc "$GITHUB_WORKSPACE/bin/sbt-launch.sh clean test:compile test:fastOptJS"
+          bash -lc "SIREUM_PARALLEL_BUILD=false $GITHUB_WORKSPACE/bin/sbt-launch.sh 'project sireum-jvm' test"
+
+  skip:
+    runs-on: ubuntu-latest
+    if: "contains(github.event.head_commit.message, '[skip ci]') || contains(github.event.head_commit.message, '[skip action]')"
+    steps:
+      - run: |
+          echo Skipped
