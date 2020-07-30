@@ -200,9 +200,9 @@ object Distros {
         content.substring(0, j) + s"<string>Sireum$ideaVer$dev" + content
           .substring(k)
       case "win" =>
-        s"idea.config.path=$${user.home}/.Sireum$ideaVer$dev/config\r\nidea.system.path=$${user.home}/.Sireum$ideaVer$dev/system\r\n" + content
+        s"idea.config.path=$${user.home}/.Sireum$ideaVer$dev/config\r\nidea.system.path=$${user.home}/.Sireum$ideaVer$dev/system\r\nidea.log.path=$${user.home}/.SireumIVE$ideaVer$dev/log\r\nidea.plugins.path=$${user.home}/.SireumIVE$ideaVer$dev/plugins\r\n" + content
       case "linux" =>
-        s"idea.config.path=$${user.home}/.Sireum$ideaVer$dev/config\nidea.system.path=$${user.home}/.Sireum$ideaVer$dev/system\n" + content
+        s"idea.config.path=$${user.home}/.Sireum$ideaVer$dev/config\nidea.system.path=$${user.home}/.Sireum$ideaVer$dev/system\nidea.log.path=$${user.home}/.SireumIVE$ideaVer$dev/log\nidea.plugins.path=$${user.home}/.SireumIVE$ideaVer$dev/plugins\n" + content
     }
     rm ! p
     write(p, newContent)
