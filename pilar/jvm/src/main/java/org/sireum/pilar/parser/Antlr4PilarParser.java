@@ -1,4 +1,4 @@
-// Generated from /Users/robby/Repositories/Sireum/sireum-v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.7
+// Generated from /Users/robby/Repositories/Sireum/v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.8
 package org.sireum.pilar.parser;
 
 // @formatter:off
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Antlr4PilarParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.7", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -30,23 +30,32 @@ public class Antlr4PilarParser extends Parser {
 		RULE_location = 8, RULE_transformation = 9, RULE_action = 10, RULE_jump = 11, 
 		RULE_switchCase = 12, RULE_exp = 13, RULE_primArgs = 14, RULE_expSuffix = 15, 
 		RULE_prim = 16, RULE_arg = 17, RULE_lit = 18, RULE_annotation = 19;
-	public static final String[] ruleNames = {
-		"modelFile", "model", "modelElement", "globalVarDecl", "procDecl", "param", 
-		"procBody", "localVarDecl", "location", "transformation", "action", "jump", 
-		"switchCase", "exp", "primArgs", "expSuffix", "prim", "arg", "lit", "annotation"
-	};
+	private static String[] makeRuleNames() {
+		return new String[] {
+			"modelFile", "model", "modelElement", "globalVarDecl", "procDecl", "param", 
+			"procBody", "localVarDecl", "location", "transformation", "action", "jump", 
+			"switchCase", "exp", "primArgs", "expSuffix", "prim", "arg", "lit", "annotation"
+		};
+	}
+	public static final String[] ruleNames = makeRuleNames();
 
-	private static final String[] _LITERAL_NAMES = {
-		null, "'global'", "'var'", "';'", "'def'", "'('", "','", "')'", "'{'", 
-		"'}'", "'#'", "'call'", "':='", "'goto'", "'assert'", "'assume'", "'ext'", 
-		"'if'", "'then'", "'else'", "'return'", "'switch'", "'default'", "':'", 
-		"'jext'", "'case'", "'@'"
-	};
-	private static final String[] _SYMBOLIC_NAMES = {
-		null, null, null, null, null, null, null, null, null, null, null, null, 
-		null, null, null, null, null, null, null, null, null, null, null, null, 
-		null, null, null, "LIT", "ID", "WS", "ERROR_CHAR"
-	};
+	private static String[] makeLiteralNames() {
+		return new String[] {
+			null, "'global'", "'var'", "';'", "'def'", "'('", "','", "')'", "'{'", 
+			"'}'", "'#'", "'call'", "':='", "'goto'", "'assert'", "'assume'", "'ext'", 
+			"'if'", "'then'", "'else'", "'return'", "'switch'", "'default'", "':'", 
+			"'jext'", "'case'", "'@'"
+		};
+	}
+	private static final String[] _LITERAL_NAMES = makeLiteralNames();
+	private static String[] makeSymbolicNames() {
+		return new String[] {
+			null, null, null, null, null, null, null, null, null, null, null, null, 
+			null, null, null, null, null, null, null, null, null, null, null, null, 
+			null, null, null, "LIT", "ID", "WS", "ERROR_CHAR"
+		};
+	}
+	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
 	/**
@@ -96,6 +105,7 @@ public class Antlr4PilarParser extends Parser {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
+
 	public static class ModelFileContext extends ParserRuleContext {
 		public ModelContext model() {
 			return getRuleContext(ModelContext.class,0);
