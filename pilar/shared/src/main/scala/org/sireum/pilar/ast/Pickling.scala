@@ -32,7 +32,7 @@ object Pickling {
   final val locField = ".loc"
 
   def pickle(node: Node): String = {
-    val jsObj = Json.fromNode(node)
+    val jsObj = org.sireum.pilar.ast.Json.fromNode(node)
     val o =
       node match {
         case node: Model if node.nodeLocMap.nonEmpty =>
@@ -49,7 +49,7 @@ object Pickling {
               true
           })(node)
           var temp = mlinkedMapEmpty[String, ujson.Value]
-          temp ++= jsObj.value.toList :+ (locField, ujson.Arr(locInfos: _*))
+          temp ++= jsObj.value.toList.:+ (locField, ujson.Arr(locInfos: _*))
           ujson.Obj(temp)
         case _ => jsObj
       }
@@ -67,7 +67,7 @@ object Pickling {
             a.value.map(org.sireum.util.Json.toLocationInfo))
         case o => (o, ivectorEmpty)
       }
-    Json.toNode[T](v) match {
+    org.sireum.pilar.ast.Json.toNode[T](v) match {
       case m: Model if locInfos.nonEmpty =>
         var i = 0
         val nodeLocMap = MIdMap[Node, LocationInfo]()

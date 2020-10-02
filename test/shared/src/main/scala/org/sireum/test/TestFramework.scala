@@ -28,13 +28,13 @@ package org.sireum.test
 import org.sireum.util._
 
 trait TestFramework {
-  def assertEquals(expected: Any, result: Any)
+  def assertEquals(expected: Any, result: Any): Unit
 
-  def assertEqualsRaw(expected: Any, result: Any)
+  def assertEqualsRaw(expected: Any, result: Any): Unit
 
-  def assertEmpty(it: Iterable[_])
+  def assertEmpty(it: Iterable[_]): Unit
 
-  def assertTrue(b: Boolean)
+  def assertTrue(b: Boolean) : Unit
 }
 
 trait TestDef {

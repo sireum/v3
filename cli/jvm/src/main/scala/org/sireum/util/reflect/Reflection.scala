@@ -210,7 +210,8 @@ object Reflection {
                  m: Mirror = mirror): Annotation = {
     def isJavaAnnotation(t: Tree) =
       !(t.tpe <:< productType) && t.children.tail.forall {
-        case _: AssignOrNamedArg => true
+        case _: AssignApi => true
+        case _: NamedArg => true
         case _ => false
       }
 
@@ -227,7 +228,9 @@ object Reflection {
             case t if t <:< seqType =>
               Vector(args.map(tree): _*)
           }
-        case AssignOrNamedArg(_, rhs) =>
+        case Assign(_, rhs) =>
+          tree(rhs)
+        case NamedArg(_, rhs) =>
           tree(rhs)
         case _ =>
           sys.error("Unhandled reflection tree: " + showRaw(tr))
@@ -237,7 +240,9 @@ object Reflection {
     val aType = a.tree.tpe
     if (isJavaAnnotation(a.tree)) {
       Annotation(aType, a.tree.children.tail.map({
-        case AssignOrNamedArg(Ident(name), rhs) =>
+        case Assign(Ident(name), rhs) =>
+          AnnotationArg(name.decodedName.toString, tree(rhs))
+        case NamedArg(Ident(name), rhs) =>
           AnnotationArg(name.decodedName.toString, tree(rhs))
       }))
     } else if (aType <:< productType) {
@@ -295,7 +300,7 @@ object Reflection {
     }
 
     val caseClassCache: MMap[Class[_], CaseClass] = {
-      import scala.collection.JavaConverters._
+      import scala.jdk.CollectionConverters._
       new java.util.WeakHashMap[Class[_], CaseClass]().asScala
     }
 

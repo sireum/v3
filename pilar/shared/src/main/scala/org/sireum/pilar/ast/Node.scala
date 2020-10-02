@@ -37,12 +37,12 @@ object Node {
 
   final def seq[T](es: Iterable[T]) = es.toVector
 
-  final def externFrom(name: String) = Json.externMap(name)._1
+  final def externFrom(name: String) = org.sireum.pilar.ast.Json.externMap(name)._1
 
-  final def externTo(name: String) = Json.externMap(name)._2
+  final def externTo(name: String) = org.sireum.pilar.ast.Json.externMap(name)._2
 
   final def extern(name: String, fg: (Any --\ String, String --\ Any)): Unit = {
-    Json.externMap(name) = fg
+    org.sireum.pilar.ast.Json.externMap(name) = fg
   }
 
   trait CommandExtractor {

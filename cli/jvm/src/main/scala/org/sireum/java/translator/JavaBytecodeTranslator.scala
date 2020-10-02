@@ -51,9 +51,9 @@ class JavaBytecodeTranslator(option: JavaBytecodeTranslatorOption,
                              errPrintln: String => Unit) {
 
   private def run(): Boolean = {
-    val printUsage = option.getInputs.length == 0
+    val printUsage = option.getInputs().length == 0
 
-    for (in <- option.getInputs) {
+    for (in <- option.getInputs()) {
       val f = new File(in)
       lazy val fPath = f.getAbsolutePath
       if (f.isFile) {
@@ -97,7 +97,7 @@ class JavaBytecodeTranslator(option: JavaBytecodeTranslatorOption,
   }
 
   private def translateZip(f: File): Option[File] = {
-    import scala.collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
     val zf = new ZipFile(f)
     val o = new File(f.getParentFile, removeExt(f.getName) + PILAR_ZIP_EXT)
     val zof = new ZipOutputStream(new FileOutputStream(o))
