@@ -362,7 +362,7 @@ object Reflection {
       implicit processAnnotations: Boolean, seen: MIdMap[AnyRef, Any]): Any =
       v match {
         case v: AnyRef =>
-          if (seen.contains(v)) seen(v)
+          if (seen.toMap().contains(v)) seen(v)
           else
             v match {
               case m: ILinkedMap[_, _] =>
