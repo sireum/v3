@@ -69,7 +69,7 @@ Model(elements: Node.Seq[ModelElement],
 
   def +(other: Model): Model = {
     val r = Model(elements ++ other.elements, annotations ++ other.annotations)
-    r.nodeLocMap ++= other.nodeLocMap
+    r.nodeLocMap.putAll(other.nodeLocMap)
     r
   }
 }

@@ -122,7 +122,7 @@ final class AstTestDefProvider(tf: TestFramework)
     var r = ivectorEmpty[Option[LocationInfo]]
     Visitor.build({
       case n: Node =>
-        r = r :+ m.nodeLocMap.get(n)
+        r = r :+ m.nodeLocMap.toMap().get(n)
         true
     })(m)
     r

@@ -1040,7 +1040,7 @@ final class FastParser(in: String,
       case _ =>
         val r = IdExp(id)
         if (createLocInfo)
-          nodeLocMap(r) = nodeLocMap(id)
+          nodeLocMap.put(r, nodeLocMap(id))
         Some(r)
     }
   }
@@ -1227,10 +1227,10 @@ final class FastParser(in: String,
       val toExtern = Node.externTo(id.value)
       if (toExtern.isDefinedAt(raw.value)) {
         val lit = ExtLit(toExtern(raw.value))
-        nodeLocMap.get(raw) match {
+        nodeLocMap.toMap().get(raw) match {
           case Some(li) =>
-            nodeLocMap -= raw
-            nodeLocMap(lit) = li
+            nodeLocMap.remove(raw)
+            nodeLocMap.put(lit, li)
           case _ =>
         }
         lit
@@ -1767,10 +1767,10 @@ object FastParser {
       createLocInfo: Boolean,
       nodeLocMap: MIdMap[Node, LocationInfo]): T = {
       if (createLocInfo)
-        nodeLocMap(n) =
+        nodeLocMap.put(n,
           org.sireum.util.LocationInfo(
             t._1, t._2, line, column, t._3, offset - t._3 + 1
-          )
+          ))
       n
     }
   }

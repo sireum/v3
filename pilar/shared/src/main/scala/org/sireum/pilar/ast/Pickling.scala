@@ -35,13 +35,13 @@ object Pickling {
     val jsObj = org.sireum.pilar.ast.Json.fromNode(node)
     val o =
       node match {
-        case node: Model if node.nodeLocMap.nonEmpty =>
+        case node: Model if node.nodeLocMap.toMap().nonEmpty =>
           val m = node.nodeLocMap
           var locInfos = ivectorEmpty[ujson.Arr]
           Visitor.build({
             case n: Node =>
               val info =
-                m.get(n) match {
+                m.toMap().get(n) match {
                   case Some(li) => org.sireum.util.Json.fromLocationInfo(li)
                   case _ => ujson.Arr()
                 }
@@ -73,7 +73,7 @@ object Pickling {
         val nodeLocMap = MIdMap[Node, LocationInfo]()
         Visitor.build({
           case n: Node =>
-            locInfos(i).foreach(nodeLocMap(n) = _)
+            locInfos(i).foreach(nodeLocMap.put(n, _))
             i += 1
             true
         })(m)
