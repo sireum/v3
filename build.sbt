@@ -522,7 +522,7 @@ lazy val sireumJvm =
             ShadeRule.rename("shapeless.**" -> "sh4d3.shapeless.@1").inAll,
             ShadeRule.rename("os.**" -> "sh4d3.os.@1").inAll,
             ShadeRule.rename("org.parboiled2.**" -> "sh4d3.org.parboiled2.@1").inAll,
-            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll,
+            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll
           ),
           assembly / assemblyMergeStrategy := commonMergeStratergy.value
         ): _*
