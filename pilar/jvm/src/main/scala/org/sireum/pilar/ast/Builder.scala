@@ -90,10 +90,10 @@ final class Builder private() {
     val toExtern = Node.externTo(id.value)
     if (toExtern.isDefinedAt(raw.value)) {
       val lit = ExtLit(toExtern(raw.value))
-      nodeLocMap.get(raw) match {
+      nodeLocMap.toMap().get(raw) match {
         case Some(li) =>
-          nodeLocMap -= raw
-          nodeLocMap(lit) = li
+          nodeLocMap.remove(raw)
+          nodeLocMap.put(lit, li)
         case _ =>
       }
       lit

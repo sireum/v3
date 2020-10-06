@@ -37,7 +37,7 @@ object AstJsTest extends UTestTestFramework {
   override lazy val provider: TestDefProvider =
     new AstTestDefProvider(this)
 
-  def tests = TestSuite {
+  def tests = utest.Tests {
 
     // This uTest list is auto-generated from data in
     // AstTestDefProvider
