@@ -912,7 +912,7 @@ final private[java] class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
             if (blocks.last._2.isEmpty) blocks.toVector.dropRight(1)
             else blocks.toVector
           val locations = for ((l, block) <- blks) yield
-            block match {
+            block.toSeq match {
               case Seq(j@InvokeLoc(lhsOpt, iop, mName, itf, args, nextLabelId)) =>
                 InvokeLoc(l, lhsOpt, iop, mName, itf, args, nextLabelId).copy(annotations = j.annotations)
               case Seq(j@InvokeDynamicLoc(lhsOpt, mName, mType, bsm, bsmArgs, args, nextLabelId)) =>
@@ -1086,8 +1086,8 @@ final private[java] class ClassBytecodeTranslator extends ClassVisitor(asmApi) {
         case Opcodes.ICONST_3 => const(ConstKind.Int, 3)
         case Opcodes.ICONST_4 => const(ConstKind.Int, 4)
         case Opcodes.ICONST_5 => const(ConstKind.Int, 5)
-        case Opcodes.LCONST_0 => const(ConstKind.Long, 0l)
-        case Opcodes.LCONST_1 => const(ConstKind.Long, 1l)
+        case Opcodes.LCONST_0 => const(ConstKind.Long, 0L)
+        case Opcodes.LCONST_1 => const(ConstKind.Long, 1L)
         case Opcodes.FCONST_0 => const(ConstKind.Float, 0.0f)
         case Opcodes.FCONST_1 => const(ConstKind.Float, 1.0f)
         case Opcodes.FCONST_2 => const(ConstKind.Float, 2.0f)

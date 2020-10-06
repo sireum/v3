@@ -148,7 +148,7 @@ object Parser {
 
 
     val modelOpts =
-      inputStrings.zipWithIndex.par.map { t =>
+      inputStrings.zipWithIndex.map { t =>
         val ((mode, text), i) = t
         val modelOpt =
           mode match {

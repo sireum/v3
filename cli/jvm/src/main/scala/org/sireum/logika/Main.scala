@@ -230,7 +230,7 @@ class Main(option: LogikaOption,
         errPrintln(t.getMessage)
     }
     if (hasError) sys.exit(COMPARE_FAILED_EXIT_CODE)
-    sys.exit
+    sys.exit()
   }
 
   def checkFormula(option: LogikaOption): Unit = {
@@ -282,7 +282,7 @@ class Main(option: LogikaOption,
         }
       case Some(tt: TruthTable) =>
         for (text <- option.formula) {
-          Builder(None, '⊢' + text, 0, isAutoEnabled = false) match {
+          Builder(None, "⊢" + text, 0, isAutoEnabled = false) match {
             case Some(sequent: Sequent) =>
               if (sequent.conclusions.head != tt.formula) {
                 val li = tt.nodeLocMap(tt.formula)
@@ -478,7 +478,7 @@ class Main(option: LogikaOption,
           %(scalaScript, "-nowarn", "-howtorun:script", "-cp", sireumJar, "-e", programText,
             JAVA_HOME = javaHome, SCALA_HOME = scalaHome)(pwd)
       }
-      sys.exit
+      sys.exit()
     } catch {
       case _: InteractiveShelloutException => sys.exit(RUN_ERROR_EXIT_CODE)
     }
@@ -563,6 +563,6 @@ class Main(option: LogikaOption,
         line = Console.in.readLine()
       }
     }
-    sys.exit
+    sys.exit()
   }
 }

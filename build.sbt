@@ -77,6 +77,8 @@ val sireumVersion = "3"
 
 lazy val scalaVer = property("org.sireum.version.scala")
 
+lazy val scalaPar = property("org.sireum.version.parcollection")
+
 lazy val sireumScalacVersion = property("org.sireum.version.scalac-plugin")
 
 lazy val metaVersion = property("org.sireum.version.scalameta")
@@ -92,6 +94,10 @@ lazy val scalaTagsVersion = property("org.sireum.version.scalatags")
 lazy val parboiled2Version = property("org.sireum.version.parboiled2")
 
 lazy val shapelessVersion = property("org.sireum.version.shapeless")
+
+lazy val akkaVersion = property("org.sireum.version.Akka")
+
+lazy val akkahttpVersion = property("org.sireum.version.Akka-Http")
 
 lazy val asmVersion = property("org.sireum.version.asm")
 
@@ -115,7 +121,7 @@ lazy val junitInterfaceVersion = property("org.sireum.version.junit-interface")
 
 lazy val utestVersion = property("org.sireum.version.utest")
 
-lazy val runtimeVersion = "0b83a7bcaf" // ghLatestCommit("sireum", "runtime", "master")
+lazy val runtimeVersion = "4.20200915.72510af" // ghLatestCommit("sireum", "runtime", "master")
 
 val BUILD_FILENAME = "BUILD"
 
@@ -336,7 +342,9 @@ lazy val awasT = toSbtCrossProject(
     "com.chuusai" %%% "shapeless" % shapelessVersion,
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
     "org.parboiled" %%% "parboiled" % parboiled2Version,
-    "org.scala-lang.modules" %% "scala-async" % "0.9.7"
+    "org.scala-lang.modules" %% "scala-async" % "0.10.0",
+    "com.typesafe.akka" %% "akka-http"   % akkahttpVersion,
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion
   )))
 
 lazy val awasShared = awasT._1
@@ -514,7 +522,7 @@ lazy val sireumJvm =
             ShadeRule.rename("shapeless.**" -> "sh4d3.shapeless.@1").inAll,
             ShadeRule.rename("os.**" -> "sh4d3.os.@1").inAll,
             ShadeRule.rename("org.parboiled2.**" -> "sh4d3.org.parboiled2.@1").inAll,
-            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll,
+            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll
           ),
           assembly / assemblyMergeStrategy := commonMergeStratergy.value
         ): _*

@@ -90,10 +90,10 @@ final class Builder private() {
     val toExtern = Node.externTo(id.value)
     if (toExtern.isDefinedAt(raw.value)) {
       val lit = ExtLit(toExtern(raw.value))
-      nodeLocMap.get(raw) match {
+      nodeLocMap.toMap().get(raw) match {
         case Some(li) =>
-          nodeLocMap -= raw
-          nodeLocMap(lit) = li
+          nodeLocMap.remove(raw)
+          nodeLocMap.put(lit, li)
         case _ =>
       }
       lit
@@ -233,7 +233,7 @@ final class Builder private() {
           buildID(ctxSC.ID())
         ) at ctxSC
       } :+ {
-        SwitchCase(None, buildID(ctx.ID())) at(ctx.b, ctx.ID())
+        SwitchCase(None, buildID(ctx.ID())).at(ctx.b, ctx.ID())
       },
       ctx.annotation().map(build)
     ) at ctx
@@ -265,7 +265,7 @@ final class Builder private() {
     var r = build(ctx.prim())
     for (arg <- ctx.arg()) {
       r = ExtExp(r, Option(arg.exp()).map(_.map(build)).
-        getOrElse(Node.emptySeq)) at(start, arg.stop)
+        getOrElse(Node.emptySeq)).at(start, arg.stop)
     }
     r
   }
@@ -297,7 +297,7 @@ final class Builder private() {
 
   @inline
   private implicit def toNodeSeq[T](ns: java.lang.Iterable[T]): Node.Seq[T] =
-    Node.seq[T](scala.collection.JavaConverters.iterableAsScalaIterable(ns))
+    Node.seq[T](scala.jdk.CollectionConverters.IterableHasAsScala(ns).asScala)
 
   @inline
   private implicit def toToken(n: TerminalNode): Token = n.getSymbol

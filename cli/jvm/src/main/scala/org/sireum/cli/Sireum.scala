@@ -28,16 +28,17 @@ package org.sireum.cli
 import _root_.java.io._
 
 import org.sireum._
+import org.sireum.cli._
 
 object Sireum extends scala.App {
-  System.exit(Cli(_root_.java.io.File.pathSeparatorChar).parseSireum(ISZ(args.map(s => s: String): _*), Z(0)) match {
-    case Some(o: Cli.LogikaOption) => Logika.run(o)
-    case Some(o: Cli.AwasOption) => awasGen(o)
-    case Some(_: Cli.HelpOption) => 0
+  System.exit(org.sireum.cli.Cli(_root_.java.io.File.pathSeparatorChar).parseSireum(ISZ(args.toSeq.map(s => s: String): _*), Z(0)) match {
+    case Some(o: org.sireum.cli.Cli.LogikaOption) => Logika.run(o)
+    case Some(o: org.sireum.cli.Cli.AwasOption) => awasGen(o)
+    case Some(_: org.sireum.cli.Cli.HelpOption) => 0
     case _ => -1
   })
 
-  def awasGen(o: Cli.AwasOption): Int = {
+  def awasGen(o: org.sireum.cli.Cli.AwasOption): Int = {
     println(s"Coming soon!")
     println()
     println(o.help)

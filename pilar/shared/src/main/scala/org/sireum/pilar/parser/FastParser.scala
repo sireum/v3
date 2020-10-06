@@ -31,12 +31,11 @@ import org.sireum.util._
 
 final class FastParser(in: String,
                        reporter: Reporter,
-                       private val createLocInfo: Boolean,
-                       private val max: Natural = 0,
+                       private val createLocInfo: Boolean,                       private val max: Natural = 0,
                        private var line: PosInteger = 1,
                        private var column: PosInteger = 1,
                        private var offset: Natural = 0) {
-  private val input: String = in.replaceAllLiterally("\r\n", "\n")
+  private val input: String = in.replace("\r\n", "\n")
   private val _max = if (max <= 0) input.length else max
   private implicit val _createLocInfo = createLocInfo
   private implicit val nodeLocMap = midmapEmpty[Node, LocationInfo]
@@ -89,7 +88,7 @@ final class FastParser(in: String,
       else ok = false
       parseWhiteSpace
     }
-    val r = Model(elements, annotations) at(line, column, offset)
+    val r = Model(elements, annotations).at(line, column, offset)
     r.nodeLocMap = nodeLocMap
 
     Some(r)
@@ -146,7 +145,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(GlobalVarDecl(id, annotations) at(line, column, offset))
+    Some(GlobalVarDecl(id, annotations).at(line, column, offset))
   }
 
   private def parseProcedureDecl(recover: => Unit): Option[ProcedureDecl] = {
@@ -253,7 +252,7 @@ final class FastParser(in: String,
 
     if (!ok) return None
 
-    Some(ParamDecl(id, annotations) at(line, column, offset))
+    Some(ParamDecl(id, annotations).at(line, column, offset))
   }
 
   private[parser] def parseProcedureBody(recover: => Unit): Option[ProcedureBody] = {
@@ -358,7 +357,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(LocalVarDecl(id, annotations) at(line, column, offset))
+    Some(LocalVarDecl(id, annotations).at(line, column, offset))
   }
 
   def parseLocation(recover: => Unit): Option[Location] = {
@@ -538,7 +537,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(AssignAction(lhs, rhs, annotations) at(line, column, offset))
+    Some(AssignAction(lhs, rhs, annotations).at(line, column, offset))
   }
 
 
@@ -578,7 +577,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(AssertAction(exp, annotations) at(line, column, offset))
+    Some(AssertAction(exp, annotations).at(line, column, offset))
   }
 
   private def parseAssumeAction(recover: => Unit): Option[AssumeAction] = {
@@ -617,7 +616,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(AssumeAction(exp, annotations) at(line, column, offset))
+    Some(AssumeAction(exp, annotations).at(line, column, offset))
   }
 
   private def parseExtAction(recover: => Unit): Option[ExtAction] = {
@@ -660,7 +659,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(ExtAction(id, args, annotations) at(line, column, offset))
+    Some(ExtAction(id, args, annotations).at(line, column, offset))
   }
 
   def parseJump(recover: => Unit): Option[Jump] = {
@@ -715,7 +714,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(GotoJump(id, annotations) at(line, column, offset))
+    Some(GotoJump(id, annotations).at(line, column, offset))
   }
 
   private def parseIfJump(recover: => Unit): Option[IfJump] = {
@@ -772,7 +771,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(IfJump(exp, t, f, annotations) at(line, column, offset))
+    Some(IfJump(exp, t, f, annotations).at(line, column, offset))
   }
 
   private def parseReturnJump(recover: => Unit): Option[ReturnJump] = {
@@ -816,7 +815,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(ReturnJump(eOpt, annotations) at(line, column, offset))
+    Some(ReturnJump(eOpt, annotations).at(line, column, offset))
   }
 
   private def parseSwitchJump(recover: => Unit): Option[SwitchJump] = {
@@ -910,7 +909,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(SwitchJump(exp, cases, annotations) at(line, column, offset))
+    Some(SwitchJump(exp, cases, annotations).at(line, column, offset))
   }
 
   private def parseExtJump(recover: => Unit): Option[ExtJump] = {
@@ -953,7 +952,7 @@ final class FastParser(in: String,
       return None
     }
 
-    Some(ExtJump(id, args, annotations) at(line, column, offset))
+    Some(ExtJump(id, args, annotations).at(line, column, offset))
   }
 
   def parseExp(recover: => Unit): Option[Exp] = {
@@ -1010,7 +1009,7 @@ final class FastParser(in: String,
     while (charEq(peek(), '(') && ok) {
       parseArg(recover) match {
         case Some(es) =>
-          r = ExtExp(r, es) at(line, column, offset)
+          r = ExtExp(r, es).at(line, column, offset)
         case _ => ok = false
       }
       parseWhiteSpace
@@ -1041,7 +1040,7 @@ final class FastParser(in: String,
       case _ =>
         val r = IdExp(id)
         if (createLocInfo)
-          nodeLocMap(r) = nodeLocMap(id)
+          nodeLocMap.put(r, nodeLocMap(id))
         Some(r)
     }
   }
@@ -1127,7 +1126,7 @@ final class FastParser(in: String,
           parseLIT(id, recover)
         else Some(RawLit(""))
       }) yield {
-      Annotation(id, raw) at(line, column, offset)
+      Annotation(id, raw).at(line, column, offset)
     }
   }
 
@@ -1228,10 +1227,10 @@ final class FastParser(in: String,
       val toExtern = Node.externTo(id.value)
       if (toExtern.isDefinedAt(raw.value)) {
         val lit = ExtLit(toExtern(raw.value))
-        nodeLocMap.get(raw) match {
+        nodeLocMap.toMap().get(raw) match {
           case Some(li) =>
-            nodeLocMap -= raw
-            nodeLocMap(lit) = li
+            nodeLocMap.remove(raw)
+            nodeLocMap.put(lit, li)
           case _ =>
         }
         lit
@@ -1768,10 +1767,10 @@ object FastParser {
       createLocInfo: Boolean,
       nodeLocMap: MIdMap[Node, LocationInfo]): T = {
       if (createLocInfo)
-        nodeLocMap(n) =
+        nodeLocMap.put(n,
           org.sireum.util.LocationInfo(
             t._1, t._2, line, column, t._3, offset - t._3 + 1
-          )
+          ))
       n
     }
   }
