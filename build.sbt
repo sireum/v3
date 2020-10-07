@@ -134,7 +134,6 @@ val devIveDistros = TaskKey[Unit]("dev-ive-distros", "Build Sireum-dev IVE distr
 val depDot = InputKey[Unit]("dep-dot", "Print project dependency in dot.")
 val refreshSlang = TaskKey[Unit]("refresh-slang", "Refresh Slang files.")
 
-iveDistros / traceLevel := -1
 Global / parallelExecution := isParallelBuild
 Global / concurrentRestrictions ++= (if (isParallelBuild) Seq() else Seq(Tags.limitAll(1)))
 
@@ -580,7 +579,7 @@ lazy val sireum = Project(id = "sireum", base = file("."))
         touche(slangFile)
       },
       initialize := {
-        val required = Set("1.8", "9", "10", "11", "14")
+        val required = Set("1.8", "9", "10", "11", "14", "15")
         val current = sys.props("java.specification.version")
         assert(required.contains(current), s"Unsupported Java version: $current (required: $required)")
       },
