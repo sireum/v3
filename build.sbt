@@ -394,6 +394,7 @@ val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting 
   case PathList("Scratch$delayedInit$body.class") => MergeStrategy.discard
   case PathList("sh4d3", "scala", "meta", _*) => MergeStrategy.first
   case PathList("sh4d3", "sourcecode", _*) => MergeStrategy.first
+  case PathList("sh4d3", "geny", _*) => MergeStrategy.first
   case PathList("scala-collection-compat.properties") => MergeStrategy.first
   case PathList("org", "sireum", _*) =>
     new MergeStrategy {
