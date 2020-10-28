@@ -520,7 +520,7 @@ lazy val sireumJvm =
             ShadeRule.rename("upack.**" -> "sh4d3.upack.@1").inAll,
             ShadeRule.rename("ujson.**" -> "sh4d3.ujson.@1").inAll,
             ShadeRule.rename("shapeless.**" -> "sh4d3.shapeless.@1").inAll,
-            ShadeRule.rename("os.**" -> "sh4d3.os.@1").inAll,
+            ShadeRule.rename("os.**" -> "sh4d3.os.@1").inLibrary("com.lihaoyi" %% "os-lib" % "latest.integration"),
             ShadeRule.rename("org.parboiled2.**" -> "sh4d3.org.parboiled2.@1").inAll,
             ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll
           ),
