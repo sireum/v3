@@ -416,6 +416,7 @@ val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting 
 
 }
 
+/*
 lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dependencies.map { p => ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt)
   }: _*)
   .settings(
@@ -436,6 +437,7 @@ lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dep
 
 lazy val awasPub = project.settings(name := "awas-pub",
   packageBin in Compile := (assembly in (awasJar, Compile)).value)
+*/
 
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, airPI)
 lazy val minix = toSbtJvmProject(minixPI, slangSettings)
@@ -522,7 +524,11 @@ lazy val sireumJvm =
             ShadeRule.rename("shapeless.**" -> "sh4d3.shapeless.@1").inAll,
             ShadeRule.rename("os.**" -> "sh4d3.os.@1").inLibrary("com.lihaoyi" %% "os-lib" % "latest.integration"),
             ShadeRule.rename("org.parboiled2.**" -> "sh4d3.org.parboiled2.@1").inAll,
-            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll
+            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll,
+            ShadeRule.rename("akka.**" -> "sh4d3.akka.@1").inAll,
+            ShadeRule.rename("com.fasterxml.**" -> "sh4d3.com.fasterxml.@1").inAll,
+            ShadeRule.rename("com.typesafe.**" -> "sh4d3.com.typesafe.@1").inAll,
+            ShadeRule.rename("org.kohsuke.**" -> "sh4d3.org.kohsuke.@1").inAll,
           ),
           assembly / assemblyMergeStrategy := commonMergeStratergy.value
         ): _*
