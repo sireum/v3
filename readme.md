@@ -1,10 +1,5 @@
 # Sireum: A Software Analysis Platform (v3)
 
-| Branch | CI |  
-| :----: | :---: | 
-| release | ![CI](https://github.com/sireum/v3/workflows/CI/badge.svg?branch=release) |
-| master | ![CI](https://github.com/sireum/v3/workflows/CI/badge.svg?branch=master) |
-
 [Simplified BSD License](license.md)
 
 ## Available Products
