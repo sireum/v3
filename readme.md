@@ -5,6 +5,7 @@
 ## Available Products
 
 * [Sireum Logika: A Program Verifier and a Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics](http://logika.sireum.org)
+* [Sireum Awas: An Information Flow Analyzer and Visualizer for Component-based Systems](http://awas.sireum.org)
 
 ## Requirements for Running Sireum
 
