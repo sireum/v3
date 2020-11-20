@@ -10,37 +10,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Set env.workspace
-        run: echo "::set-env name=workspace::$GITHUB_WORKSPACE"
       - name: Cache Java
         id: cache-java
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/java
+          path: platform/java
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-java
       - name: Cache Z3
         id: cache-z3
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/apps/z3
+          path: apps/z3
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-z3
       - name: Cache Scala
         id: cache-scala
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/scala
+          path: platform/scala
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-scala
       - name: Cache Node
         id: cache-node
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/node
+          path: platform/node
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-node
       - name: Cache sbt
         id: cache-sbt
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/sbt
+          path: platform/sbt
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-sbt
       - name: Test
         run: |
@@ -55,37 +53,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Set env.workspace
-        run: echo "::set-env name=workspace::$GITHUB_WORKSPACE"
       - name: Cache Java
         id: cache-java
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/java
+          path: platform/java
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-java
       - name: Cache Z3
         id: cache-z3
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/apps/z3
+          path: apps/z3
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-z3
       - name: Cache Scala
         id: cache-scala
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/scala
+          path: platform/scala
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-scala
       - name: Cache Node
         id: cache-node
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/node
+          path: platform/node
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-node
       - name: Cache sbt
         id: cache-sbt
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/sbt
+          path: platform/sbt
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-sbt
       - name: Test
         run: |
@@ -100,8 +96,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Set env.workspace
-        run: echo "::set-env name=workspace::$($env:GITHUB_WORKSPACE)"
       - name: Install Cygwin
         shell: cmd
         run: |
@@ -110,33 +104,33 @@ jobs:
           C:\tools\cygwin\cygwinsetup.exe -qgnNdO -R C:/tools/cygwin -s http://mirrors.kernel.org/sourceware/cygwin/ -P bc,unzip,wget
       - name: Cache Java
         id: cache-java
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/java
+          path: platform/java
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-java
       - name: Cache Z3
         id: cache-z3
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/apps/z3
+          path: apps/z3
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-z3
       - name: Cache Scala
         id: cache-scala
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/scala
+          path: platform/scala
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-scala
       - name: Cache Node
         id: cache-node
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/node
+          path: platform/node
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-node
       - name: Cache sbt
         id: cache-sbt
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
-          path: ${{ env.workspace }}/platform/sbt
+          path: platform/sbt
           key: ${{ runner.os }}-${{ hashFiles('bin/prelude.sh') }}-sbt
       - name: Test
         shell: cmd
