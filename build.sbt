@@ -73,13 +73,21 @@ def property(key: String): String = {
   value
 }
 
+def ghLatestTag(owner: String, repo: String): String = {
+  import ammonite.ops._
+  val out = %%("git", "ls-remote", "--tags", "--refs", "--sort=v:refname", s"https://github.com/$owner/$repo.git")(pwd).out
+  val lines = for (line <- out.lines if line.contains("refs/tags/4.")) yield line
+  val last = lines(lines.length - 1)
+  last.substring(last.indexOf("refs/tags/") + "refs/tags/".length).trim
+}
+
 val sireumVersion = "3"
 
 lazy val scalaVer = property("org.sireum.version.scala")
 
 lazy val scalaPar = property("org.sireum.version.parcollection")
 
-lazy val sireumScalacVersion = property("org.sireum.version.scalac-plugin")
+lazy val sireumScalacVersion = property("org.sireum.version.scalac-plugin") // ghLatestTag("sireum", "scalac-plugin")
 
 lazy val metaVersion = property("org.sireum.version.scalameta")
 
@@ -123,7 +131,7 @@ lazy val nuprocessVersion = property("org.sireum.version.nuprocess")
 
 lazy val utestVersion = property("org.sireum.version.utest")
 
-lazy val runtimeVersion = property("org.sireum.version.library") // ghLatestCommit("sireum", "runtime", "master")
+lazy val runtimeVersion = property("org.sireum.version.library") // ghLatestTag("sireum", "kekinian")
 
 val BUILD_FILENAME = "BUILD"
 
@@ -223,14 +231,6 @@ lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(
   libraryDependencies += "org.sireum.kekinian" %%% "test" % runtimeVersion % "test")
 
 val depOpt = Some("test->test;compile->compile;test->compile")
-
-def ghLatestCommit(owner: String, repo: String, branch: String): String = {
-  import ammonite.ops._
-  val out = %%('git, "ls-remote", s"https://github.com/$owner/$repo.git")(pwd).out
-  for (line <- out.lines if line.contains(s"refs/heads/$branch"))
-    return line.substring(0, 10)
-  throw new RuntimeException(s"Could not determine latest commit for https://github.com/$owner/$repo.git branch $branch!")
-}
 
 def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSettings): Project =
   Project(id = pi.id, base = pi.baseDir / "jvm")
