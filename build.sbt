@@ -95,9 +95,7 @@ lazy val parboiled2Version = property("org.sireum.version.parboiled2")
 
 lazy val shapelessVersion = property("org.sireum.version.shapeless")
 
-lazy val akkaVersion = property("org.sireum.version.Akka")
-
-lazy val akkahttpVersion = property("org.sireum.version.Akka-Http")
+lazy val caskVersion = property("org.sireum.version.cask")
 
 lazy val asmVersion = property("org.sireum.version.asm")
 
@@ -342,8 +340,7 @@ lazy val awasT = toSbtCrossProject(
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion,
     "org.parboiled" %%% "parboiled" % parboiled2Version,
     "org.scala-lang.modules" %% "scala-async" % "0.10.0",
-    "com.typesafe.akka" %% "akka-http"   % akkahttpVersion,
-    "com.typesafe.akka" %% "akka-stream" % akkaVersion
+    "com.lihaoyi" %% "cask" % caskVersion,
   )))
 
 lazy val awasShared = awasT._1
@@ -416,8 +413,8 @@ val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting 
 }
 
 lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dependencies.map { p => ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt)
-  }: _*)
-  .settings(
+}: _*)
+  .settings(scalaVersion := scalaVer,
     assemblySettings ++ Seq(
       assembly / logLevel := Level.Error,
       assemblyJarName in assembly := "awas.jar",
@@ -429,9 +426,9 @@ lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dep
             x.data.getName.contains("protobuf") ||
             x.data.getName.contains("junit")
         }
-    },
-    assembly / assemblyMergeStrategy := commonMergeStratergy.value,
-    skip in publish := true) :_*)
+      },
+      assembly / assemblyMergeStrategy := commonMergeStratergy.value,
+      skip in publish := true))
 
 lazy val awasPub = project.settings(name := "awas-pub",
   packageBin in Compile := (assembly in (awasJar, Compile)).value)
