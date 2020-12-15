@@ -73,13 +73,21 @@ def property(key: String): String = {
   value
 }
 
+def ghLatestTag(owner: String, repo: String): String = {
+  import ammonite.ops._
+  val out = %%("git", "ls-remote", "--tags", "--refs", "--sort=v:refname", s"https://github.com/$owner/$repo.git")(pwd).out
+  val lines = for (line <- out.lines if line.contains("refs/tags/4.")) yield line
+  val last = lines(lines.length - 1)
+  last.substring(last.indexOf("refs/tags/") + "refs/tags/".length).trim
+}
+
 val sireumVersion = "3"
 
 lazy val scalaVer = property("org.sireum.version.scala")
 
 lazy val scalaPar = property("org.sireum.version.parcollection")
 
-lazy val sireumScalacVersion = property("org.sireum.version.scalac-plugin")
+lazy val sireumScalacVersion = property("org.sireum.version.scalac-plugin") // ghLatestTag("sireum", "scalac-plugin")
 
 lazy val metaVersion = property("org.sireum.version.scalameta")
 
@@ -117,9 +125,11 @@ lazy val snakeYamlVersion = property("org.sireum.version.snakeyaml")
 
 lazy val junitInterfaceVersion = property("org.sireum.version.junit-interface")
 
+lazy val nuprocessVersion = property("org.sireum.version.nuprocess")
+
 lazy val utestVersion = property("org.sireum.version.utest")
 
-lazy val runtimeVersion = "4.20200915.72510af" // ghLatestCommit("sireum", "runtime", "master")
+lazy val runtimeVersion = property("org.sireum.version.library") // ghLatestTag("sireum", "kekinian")
 
 val BUILD_FILENAME = "BUILD"
 
@@ -183,6 +193,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.jgrapht" % "jgrapht-io" % jgraphtVersion,
     "com.lihaoyi" %% "ammonite-ops" % ammoniteOpsVersion,
     "com.sksamuel.diff" % "diff" % diffVersion,
+    "com.zaxxer" % "nuprocess" % nuprocessVersion,
     "com.novocode" % "junit-interface" % junitInterfaceVersion
   ),
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
@@ -218,14 +229,6 @@ lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(
   libraryDependencies += "org.sireum.kekinian" %%% "test" % runtimeVersion % "test")
 
 val depOpt = Some("test->test;compile->compile;test->compile")
-
-def ghLatestCommit(owner: String, repo: String, branch: String): String = {
-  import ammonite.ops._
-  val out = %%('git, "ls-remote", s"https://github.com/$owner/$repo.git")(pwd).out
-  for (line <- out.lines if line.contains(s"refs/heads/$branch"))
-    return line.substring(0, 10)
-  throw new RuntimeException(s"Could not determine latest commit for https://github.com/$owner/$repo.git branch $branch!")
-}
 
 def toSbtJvmProject(pi: ProjectInfo, settings: Seq[Def.Setting[_]] = sireumJvmSettings): Project =
   Project(id = pi.id, base = pi.baseDir / "jvm")
@@ -391,6 +394,7 @@ val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting 
   case PathList("Scratch$delayedInit$body.class") => MergeStrategy.discard
   case PathList("sh4d3", "scala", "meta", _*) => MergeStrategy.first
   case PathList("sh4d3", "sourcecode", _*) => MergeStrategy.first
+  case PathList("sh4d3", "geny", _*) => MergeStrategy.first
   case PathList("scala-collection-compat.properties") => MergeStrategy.first
   case PathList("org", "sireum", _*) =>
     new MergeStrategy {
@@ -412,6 +416,7 @@ val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting 
 
 }
 
+/*
 lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dependencies.map { p => ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt)
 }: _*)
   .settings(scalaVersion := scalaVer,
@@ -432,6 +437,7 @@ lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dep
 
 lazy val awasPub = project.settings(name := "awas-pub",
   packageBin in Compile := (assembly in (awasJar, Compile)).value)
+*/
 
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, airPI)
 lazy val minix = toSbtJvmProject(minixPI, slangSettings)
@@ -490,6 +496,7 @@ lazy val sireumJvm =
             ShadeRule.rename("com.sksamuel.**" -> "sh4d3.com.sksamuel.@1").inAll,
             ShadeRule.rename("com.trueaccord.**" -> "sh4d3.com.trueaccord.@1").inAll,
             ShadeRule.rename("fastparse.**" -> "sh4d3.fastparse.@1").inAll,
+            ShadeRule.rename("com.zaxxer.**" -> "sh4d3.com.zaxxer.@1").inAll,
             ShadeRule.rename("google.**" -> "sh4d3.google.@1").inAll,
             ShadeRule.rename("org.langmeta.**" -> "sh4d3.org.langmeta.@1").inAll,
             ShadeRule.rename("org.scalameta.**" -> "sh4d3.org.scalameta.@1").inAll,
@@ -516,9 +523,13 @@ lazy val sireumJvm =
             ShadeRule.rename("upack.**" -> "sh4d3.upack.@1").inAll,
             ShadeRule.rename("ujson.**" -> "sh4d3.ujson.@1").inAll,
             ShadeRule.rename("shapeless.**" -> "sh4d3.shapeless.@1").inAll,
-            ShadeRule.rename("os.**" -> "sh4d3.os.@1").inAll,
+            ShadeRule.rename("os.**" -> "sh4d3.os.@1").inLibrary("com.lihaoyi" %% "os-lib" % "latest.integration"),
             ShadeRule.rename("org.parboiled2.**" -> "sh4d3.org.parboiled2.@1").inAll,
-            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll
+            ShadeRule.rename("org.jheaps.**" -> "sh4d3.org.jheaps.@1").inAll,
+            ShadeRule.rename("akka.**" -> "sh4d3.akka.@1").inAll,
+            ShadeRule.rename("com.fasterxml.**" -> "sh4d3.com.fasterxml.@1").inAll,
+            ShadeRule.rename("com.typesafe.**" -> "sh4d3.com.typesafe.@1").inAll,
+            ShadeRule.rename("org.kohsuke.**" -> "sh4d3.org.kohsuke.@1").inAll,
           ),
           assembly / assemblyMergeStrategy := commonMergeStratergy.value
         ): _*

@@ -1,15 +1,11 @@
 # Sireum: A Software Analysis Platform (v3)
 
-| Branch | CI |  
-| :----: | :---: | 
-| release | ![CI](https://github.com/sireum/v3/workflows/CI/badge.svg?branch=release) |
-| master | ![CI](https://github.com/sireum/v3/workflows/CI/badge.svg?branch=master) |
-
 [Simplified BSD License](license.md)
 
 ## Available Products
 
 * [Sireum Logika: A Program Verifier and a Natural Deduction Proof Checker for Propositional, Predicate, and Programming Logics](http://logika.sireum.org)
+* [Sireum Awas: An Information Flow Analyzer and Visualizer for Component-based Systems](http://awas.sireum.org)
 
 ## Requirements for Running Sireum
 

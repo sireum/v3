@@ -53,4 +53,4 @@ if [[ $(uname -s) == CYGWIN* ]]; then
 else
   SBT_JAR=${SIREUM_HOME}/platform/sbt/bin/sbt-launch.jar
 fi
-${JAVA} ${JVM_OPTS} -Dfile.encoding=UTF-8 -jar ${SBT_JAR} "$@"
+${JAVA} ${JVM_OPTS} -Dfile.encoding=UTF-8 -Dsbt.io.implicit.relative.glob.conversion=allow -jar ${SBT_JAR} "$@"
