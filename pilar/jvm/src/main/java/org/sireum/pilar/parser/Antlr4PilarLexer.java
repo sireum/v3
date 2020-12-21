@@ -1,4 +1,4 @@
-// Generated from /Users/robby/Repositories/Sireum/v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.8
+// Generated from /Users/robby/Repositories/Sireum/v3/pilar/jvm/src/main/resources/org/sireum/pilar/parser/Antlr4Pilar.g4 by ANTLR 4.9
 package org.sireum.pilar.parser;
 
 // @formatter:off
@@ -14,7 +14,7 @@ import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class Antlr4PilarLexer extends Lexer {
-	static { RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.9", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
