@@ -263,7 +263,7 @@ object Distros {
         patchIconExe(path / 'bin / "idea.exe")
         patchIconExe(path / 'bin / "idea64.exe")
         if (isDev) (path / 'bin, "idea-dev.ico", "idea.ico")
-        else (path / 'bin, "idea.ico", "idea.ico")
+        else (path / 'bin, "idea_CE.ico", "idea.ico")
       case "linux" =>
         if (isDev) (path / 'bin, "idea-dev.png", "idea.png")
         else (path / 'bin, "idea.png", "idea.png")
