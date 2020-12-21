@@ -62,8 +62,8 @@ object Distros {
   lazy val pluginUpdateIdMap: Map[String, Int] = Map(
     "sireum" -> (if (isDev) 0 else 0),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 105697 else 97067),
-    "markdown" -> (if (isDev) 103214 else 92079),
+    "scala" -> (if (isDev) 105697 else 105697),
+    "markdown" -> (if (isDev) 103214 else 103214),
     "asm" -> 65971,
     "antlr" -> 104568
   ) ++ (if (isDev)
