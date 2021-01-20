@@ -44,7 +44,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  lazy val ideaVer: String = if (isDev) "2020.3" else "2020.3"
+  lazy val ideaVer: String = if (isDev) "2020.3.1" else "2020.3.1"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -63,12 +63,12 @@ object Distros {
     "sireum" -> (if (isDev) 0 else 0),
     "jdt" -> 32149,
     "scala" -> (if (isDev) 105697 else 105697),
-    "markdown" -> (if (isDev) 103214 else 103214),
+    "markdown" -> (if (isDev) 106326 else 106326),
     "asm" -> 65971,
     "antlr" -> 104568
   ) ++ (if (isDev)
           Map(
-            "python" -> 106029,
+            "python" -> 106700,
             "rst" -> 104155,
             "latex" -> 18476
           )
