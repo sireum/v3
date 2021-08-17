@@ -284,12 +284,8 @@ object Distros {
       }
     } while (!done)
     val entriesToUpdate =
-      (for (f <- iconsPath.toIO.listFiles if !ignoredIcons.contains(f.getName))
-        yield {
-          require(entries.contains(f.getName),
-                  s"File ${f.getName} is not in $iconsJar.")
-          f.getName
-        }).toVector
+      (for (f <- iconsPath.toIO.listFiles if !ignoredIcons.contains(f.getName) && entries.contains(f.getName))
+        yield f.getName).toVector
     val cmd = "zip" +: iconsJar.toString +: entriesToUpdate
     Shellout.executeStream(iconsPath,
                            Command(cmd, Map(), Shellout.executeStream))
