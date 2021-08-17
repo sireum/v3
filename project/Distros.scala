@@ -99,8 +99,7 @@ object Distros {
     "idea_logo_background.png",
   )
 
-  val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
-    (baseDir / 'distros / "idea64.exe").toIO.isFile
+  val hasExes: Boolean = (baseDir / 'distros / "idea64.exe").toIO.isFile
 
   def buildIVEDev(): Unit = {
     isDev = true
@@ -260,7 +259,7 @@ object Distros {
         if (isDev) (path / 'Resources, "idea-dev.icns", "idea.icns")
         else (path / 'Resources, "idea.icns", "idea.icns")
       case "win" =>
-        patchIconExe(path / 'bin / "idea.exe")
+        //patchIconExe(path / 'bin / "idea.exe")
         patchIconExe(path / 'bin / "idea64.exe")
         if (isDev) (path / 'bin, "idea-dev.ico", "idea.ico")
         else (path / 'bin, "idea_CE.ico", "idea.ico")
@@ -335,7 +334,7 @@ object Distros {
         println("done!")
         extractPlugins(tempDir / 'plugins)
         patchIdeaProperties(platform, tempDir / 'bin / "idea.properties")
-        patchVMOptions(platform, tempDir / 'bin / "idea.exe.vmoptions")
+        //patchVMOptions(platform, tempDir / 'bin / "idea.exe.vmoptions")
         patchVMOptions(platform, tempDir / 'bin / "idea64.exe.vmoptions")
         patchImages(tempDir)
         patchIcon(platform, tempDir)
@@ -359,7 +358,7 @@ object Distros {
         extractPlugins(tempDir / 'idea / 'plugins)
         patchIdeaProperties(platform,
                             tempDir / 'idea / 'bin / "idea.properties")
-        patchVMOptions(platform, tempDir / 'idea / 'bin / "idea.vmoptions")
+        //patchVMOptions(platform, tempDir / 'idea / 'bin / "idea.vmoptions")
         patchVMOptions(platform, tempDir / 'idea / 'bin / "idea64.vmoptions")
         patchImages(tempDir / 'idea)
         patchIcon(platform, tempDir / 'idea)
