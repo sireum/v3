@@ -401,6 +401,7 @@ object Distros {
         val bundleDmg = baseDir / 'distros / s"sireum-v3$dev-ive-mac64.dmg"
         rm ! bundle
         rm ! bundleDmg
+        %%('codesign, "--force", "--deep", "--sign", "-", ideaDir / platform / s"Sireum$dev.app")
         %%('tar, 'cfz, bundle, s"Sireum$dev.app")(ideaDir / platform)
         val ver =
           (read ! baseDir / 'distros / s"sireum-v3$dev-VER").substring(0, 7)
