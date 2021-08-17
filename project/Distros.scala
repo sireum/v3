@@ -271,7 +271,7 @@ object Distros {
     print(s"Replacing icon $dirPath/$filename ... ")
     %%('cp, srcFilename, dirPath / filename)(iconsPath)
     println("done!")
-    val iconsJar = path / 'lib / "icons.jar"
+    val iconsJar = path / 'lib / "platform-impl.jar"
     print(s"Patching $iconsJar ... ")
     val jis = new JarInputStream(new FileInputStream(iconsJar.toIO))
     var entries = Set[String]()
