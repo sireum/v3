@@ -222,7 +222,7 @@ lazy val webSettings = sireumSettings ++ Seq(
 
 lazy val commonSlangSettings = Seq(
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
-  libraryDependencies += "org.sireum.kekinian" %%% "library" % runtimeVersion)
+  libraryDependencies += "org.sireum.kekinian" %%% "library-shared" % runtimeVersion)
 
 lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(
   scalacOptions ++= Seq("-Yrangepos"),
@@ -377,10 +377,10 @@ lazy val awasJs = {
     .settings(webSettings: _*)
     .settings(
       jsDependencies ++= getAwasJSDep(baseDirectory.value),
-      version in webpack := "4.8.1",
+      webpack / version := "4.8.1",
       webpackBundlingMode := BundlingMode.LibraryAndApplication(),
       //scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-      skip in packageJSDependencies := false
+      packageJSDependencies / skip := false
     )
   }
 
@@ -485,13 +485,13 @@ lazy val sireumJvm =
           assembly / assemblyOutputPath := file("bin/sireum.jar"),
           assembly / test := {},
           assembly / logLevel := Level.Error,
-          assemblyExcludedJars in assembly := {
-            val cp = (fullClasspath in assembly).value
+          assembly / assemblyExcludedJars := {
+            val cp = (assembly / fullClasspath).value
             cp filter { x =>
               x.data.getName.contains("scalapb") || x.data.getName.contains("protobuf")
             }
           },
-          assemblyShadeRules in assembly := Seq(
+          assembly / assemblyShadeRules := Seq(
             ShadeRule.rename("com.novocode.**" -> "sh4d3.com.novocode.@1").inAll,
             ShadeRule.rename("com.sksamuel.**" -> "sh4d3.com.sksamuel.@1").inAll,
             ShadeRule.rename("com.trueaccord.**" -> "sh4d3.com.trueaccord.@1").inAll,
@@ -587,7 +587,7 @@ lazy val sireum = Project(id = "sireum", base = file("."))
         touche(slangFile)
       },
       initialize := {
-        val required = Set("1.8", "9", "10", "11", "14", "15")
+        val required = Set("1.8", "9", "10", "11", "14", "15", "16")
         val current = sys.props("java.specification.version")
         assert(required.contains(current), s"Unsupported Java version: $current (required: $required)")
       },

@@ -142,7 +142,7 @@ object Parser {
 
     val inputStrings =
       if (stdin)
-        ivector((inputMode, io.Source.stdin.getLines().mkString(System.lineSeparator())))
+        ivector((inputMode, _root_.scala.io.Source.stdin.getLines().mkString(System.lineSeparator())))
       else
         inputs.map(f => (f._1, new String(Files.readAllBytes(f._2.toPath))))
 

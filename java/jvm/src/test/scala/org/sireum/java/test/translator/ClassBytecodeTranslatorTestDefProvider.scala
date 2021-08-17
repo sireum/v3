@@ -37,7 +37,7 @@ final class ClassBytecodeTranslatorTestDefProvider(tf: TestFramework)
   override def testDefs: ISeq[TestDef] = ivector(
     EqualTest("ClassBytecodeTranslator",
       translate(classOf[ClassBytecodeTranslator]),
-      "1948d5e65ec23d477967a5d2eced45c4")
+      "e1d6e23dc835e744943785b863d17038")
   )
 
   private def translate(c: Class[_]): String = {
