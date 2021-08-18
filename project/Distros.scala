@@ -338,14 +338,14 @@ object Distros {
         patchVMOptions(platform, tempDir / 'bin / "idea64.exe.vmoptions")
         patchImages(tempDir)
         patchIcon(platform, tempDir)
-        %%('cp,
-           "-p",
-           pwd / 'resources / 'distro / "idea.bat",
-           buildDir / platform / "sireum-v3")
+//        %%('cp,
+//           "-p",
+//           pwd / 'resources / 'distro / "idea.bat",
+//           buildDir / platform / "sireum-v3")
         %%('cp,
            "-p",
            pwd / 'resources / 'distro / "idea64.bat",
-           buildDir / platform / "sireum-v3")
+           buildDir / platform / "sireum-v3" / "idea.bat")
         if (isDev)
           mv(buildDir / platform / "sireum-v3",
              buildDir / platform / s"sireum-v3$dev")
