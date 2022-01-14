@@ -23,9 +23,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import ammonite.ops
+
 import java.io.{File, FileInputStream, FilenameFilter}
 import java.util.jar.JarInputStream
-
 import ammonite.ops._
 
 object Distros {
@@ -222,6 +223,16 @@ object Distros {
     println("done!")
   }
 
+  def rebuildPlatformImpl(path: Path): Unit = {
+    val filePath = path / 'lib / "platform-impl.jar"
+    val dir = path / 'lib / "platform-impl"
+    mkdir ! dir
+    %%('unzip, filePath)(dir)
+    rm ! filePath
+    %%('zip, "-r", filePath, ".")(dir)
+    rm ! dir
+  }
+
   def patchImages(path: Path): Unit = {
     val filePath = path / 'lib / "platform-impl.jar"
     print(s"Patching $filePath ... ")
@@ -325,6 +336,7 @@ object Distros {
           tempDir / "Sireum.app" / 'Contents / 'bin / "idea.vmoptions")
         patchImages(tempDir / "Sireum.app" / 'Contents)
         patchIcon(platform, tempDir / "Sireum.app" / 'Contents)
+        rebuildPlatformImpl(tempDir / "Sireum.app" / 'Contents)
       case "win" =>
         val tempDir = buildDir / platform / "sireum-v3" / 'apps / 'idea
         mkdir ! tempDir
@@ -337,6 +349,7 @@ object Distros {
         patchVMOptions(platform, tempDir / 'bin / "idea64.exe.vmoptions")
         patchImages(tempDir)
         patchIcon(platform, tempDir)
+        rebuildPlatformImpl(tempDir)
 //        %%('cp,
 //           "-p",
 //           pwd / 'resources / 'distro / "idea.bat",
@@ -361,6 +374,7 @@ object Distros {
         patchVMOptions(platform, tempDir / 'idea / 'bin / "idea64.vmoptions")
         patchImages(tempDir / 'idea)
         patchIcon(platform, tempDir / 'idea)
+        rebuildPlatformImpl(tempDir / 'idea)
         %%('cp,
            "-p",
            pwd / 'resources / 'distro / 'idea,
