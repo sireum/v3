@@ -27,11 +27,11 @@ COMMANDS="rm mv git unzip wget bc"
 for COMMAND in ${COMMANDS}; do
 	type -P ${COMMAND} &>/dev/null && continue || { >&2 echo "${COMMAND} command not found."; exit 1; }
 done
-ZULU_VERSION=16.32.15-ca-jdk16.0.2
-SCALA_VERSION=2.13.6
-SBT_VERSION=1.5.5
+ZULU_VERSION=17.30.15-ca-fx-jdk17.0.1
+SCALA_VERSION=2.13.8
+SBT_VERSION=1.6.1
 NODE_VERSION=14.17.5
-Z3_VERSION=4.8.12
+Z3_VERSION=4.8.14
 if [ -z "${PLATFORM}" ]; then
   if [ -n "$COMSPEC" -a -x "$COMSPEC" ]; then
     PLATFORM=win
@@ -48,7 +48,7 @@ if [ "${PLATFORM}" = "win"  ]; then
 elif [ "${PLATFORM}" = "mac"  ]; then
   ZULU_DROP_URL=https://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-macosx_x64.tar.gz
   NODE_DROP_URL=https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-darwin-x64.tar.gz
-  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-osx-10.15.7.zip
+  Z3_DROP_URL=https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-osx-10.16.zip
 elif [ "${PLATFORM}" = "linux"  ]; then
   type -P xz &>/dev/null || { >&2 echo "xz command not found."; exit 1; }
   ZULU_DROP_URL=https://cdn.azul.com/zulu/bin/zulu${ZULU_VERSION}-linux_x64.tar.gz
