@@ -215,6 +215,7 @@ lazy val webSettings = sireumSettings ++ Seq(
   packageJSDependencies / skip := false,
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
+    "org.scala-js" %%% "scala-js-macrotask-executor" % "1.0.0",
     "be.doeraene" %%% "scalajs-jquery" % scalaJsJQueryVersion,
     "com.lihaoyi" %%% "scalatags" % scalaTagsVersion
   )
@@ -356,7 +357,8 @@ def getAwasJSDep(base : File) : Seq[AbstractJSDep] = {
       ProvidedJS / "min/jquery.js",
       ProvidedJS / "min/goldenlayout.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/viz.js" dependsOn "min/jquery.js",
-      ProvidedJS / "min/SVGPanZoom.min.js" dependsOn "min/jquery.js",
+      //      ProvidedJS / "min/SVGPanZoom.min.js" dependsOn "min/jquery.js",
+      ProvidedJS / "min/svg-pan-zoom.min.js",
       ProvidedJS / "min/jquery.treetable.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/jquery.terminal.min.js" dependsOn "min/jquery.js",
       ProvidedJS / "min/jquery.mousewheel-min.js" dependsOn "min/jquery.js",
@@ -379,7 +381,9 @@ lazy val awasJs = {
       jsDependencies ++= getAwasJSDep(baseDirectory.value),
       webpack / version := "4.8.1",
       webpackBundlingMode := BundlingMode.LibraryAndApplication(),
-      //scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+      scalaJSLinkerConfig ~= {
+        _.withModuleKind(ModuleKind.CommonJSModule)
+      },
       packageJSDependencies / skip := false
     )
   }
@@ -416,7 +420,7 @@ val commonMergeStratergy: Def.Initialize[String => MergeStrategy] = Def.setting 
 
 }
 
-/*
+
 lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dependencies.map { p => ClasspathDependency(LocalProject(p.id + "-jvm"), depOpt)
 }: _*)
   .settings(scalaVersion := scalaVer,
@@ -437,7 +441,7 @@ lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dep
 
 lazy val awasPub = project.settings(name := "awas-pub",
   packageBin in Compile := (assembly in (awasJar, Compile)).value)
-*/
+
 
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, airPI)
 lazy val minix = toSbtJvmProject(minixPI, slangSettings)
