@@ -3,8 +3,8 @@ export SCRIPT_DIR=$( cd "$( dirname "$0" )" &> /dev/null && pwd )
 export SIREUM_IDEA_DISTROS=true
 rm -f sireum-v3-idea* sireum-v3-dev-idea*
 $SCRIPT_DIR/build.sh
-if [ -e $SCRIPT_DIR/idea.exe ] && [ -e $SCRIPT_DIR/idea64.exe ]; then
-  cp $SCRIPT_DIR/idea.exe $SCRIPT_DIR/idea64.exe sireum-v3/distros
+if [ -e $SCRIPT_DIR/idea64.exe ]; then
+  cp $SCRIPT_DIR/idea64.exe sireum-v3/distros
 fi
 if [ -e $SCRIPT_DIR/../project/Distros.scala ]; then
   cp $SCRIPT_DIR/../project/Distros.scala $SCRIPT_DIR/sireum-v3/project/Distros.scala
@@ -23,8 +23,8 @@ if [ -z $SIREUM_DISTRO_BUILD_DIR ]; then
     mv $SCRIPT_DIR/sireum-v3/distros/idea $SCRIPT_DIR/
   fi
 fi
-if [ ! -e $SCRIPT_DIR/idea.exe ] || [ ! -e $SCRIPT_DIR/idea64.exe ]; then
-  cp $SCRIPT_DIR/sireum-v3/distros/idea.exe $SCRIPT_DIR/sireum-v3/distros/idea64.exe $SCRIPT_DIR/
+if [ ! -e $SCRIPT_DIR/idea64.exe ]; then
+  cp $SCRIPT_DIR/sireum-v3/distros/idea64.exe $SCRIPT_DIR/
 fi
 
 rm -fR $SCRIPT_DIR/sireum-v3 $SCRIPT_DIR/sireum-v3-dev

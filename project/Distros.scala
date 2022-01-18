@@ -23,9 +23,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import ammonite.ops
+
 import java.io.{File, FileInputStream, FilenameFilter}
 import java.util.jar.JarInputStream
-
 import ammonite.ops._
 
 object Distros {
@@ -44,7 +45,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  lazy val ideaVer: String = if (isDev) "2020.3.1" else "2020.3.1"
+  lazy val ideaVer: String = if (isDev) "2021.3.1" else "2021.3.1"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -62,14 +63,13 @@ object Distros {
   lazy val pluginUpdateIdMap: Map[String, Int] = Map(
     "sireum" -> (if (isDev) 0 else 0),
     "jdt" -> 32149,
-    "scala" -> (if (isDev) 105697 else 105697),
-    "markdown" -> (if (isDev) 106326 else 106326),
-    "asm" -> 65971,
-    "antlr" -> 104568
+    "scala" -> (if (isDev) 153523 else 153523),
+    "asm" -> 137281,
+    "antlr" -> 144492
   ) ++ (if (isDev)
           Map(
-            "python" -> 106700,
-            "rst" -> 104155,
+            "python" -> 152502,
+            "rst" -> 147086,
             "latex" -> 18476
           )
         else Map())
@@ -99,8 +99,7 @@ object Distros {
     "idea_logo_background.png",
   )
 
-  val hasExes: Boolean = (baseDir / 'distros / "idea.exe").toIO.isFile &&
-    (baseDir / 'distros / "idea64.exe").toIO.isFile
+  val hasExes: Boolean = (baseDir / 'distros / "idea64.exe").toIO.isFile
 
   def buildIVEDev(): Unit = {
     isDev = true
@@ -224,8 +223,18 @@ object Distros {
     println("done!")
   }
 
+  def rebuildPlatformImpl(path: Path): Unit = {
+    val filePath = path / 'lib / "platform-impl.jar"
+    val dir = path / 'lib / "platform-impl"
+    mkdir ! dir
+    %%('unzip, filePath)(dir)
+    rm ! filePath
+    %%('zip, "-r", filePath, ".")(dir)
+    rm ! dir
+  }
+
   def patchImages(path: Path): Unit = {
-    val filePath = path / 'lib / "resources.jar"
+    val filePath = path / 'lib / "platform-impl.jar"
     print(s"Patching $filePath ... ")
     if (isDev)
       %%('zip,
@@ -260,7 +269,7 @@ object Distros {
         if (isDev) (path / 'Resources, "idea-dev.icns", "idea.icns")
         else (path / 'Resources, "idea.icns", "idea.icns")
       case "win" =>
-        patchIconExe(path / 'bin / "idea.exe")
+        //patchIconExe(path / 'bin / "idea.exe")
         patchIconExe(path / 'bin / "idea64.exe")
         if (isDev) (path / 'bin, "idea-dev.ico", "idea.ico")
         else (path / 'bin, "idea_CE.ico", "idea.ico")
@@ -271,7 +280,7 @@ object Distros {
     print(s"Replacing icon $dirPath/$filename ... ")
     %%('cp, srcFilename, dirPath / filename)(iconsPath)
     println("done!")
-    val iconsJar = path / 'lib / "icons.jar"
+    val iconsJar = path / 'lib / "platform-impl.jar"
     print(s"Patching $iconsJar ... ")
     val jis = new JarInputStream(new FileInputStream(iconsJar.toIO))
     var entries = Set[String]()
@@ -284,12 +293,8 @@ object Distros {
       }
     } while (!done)
     val entriesToUpdate =
-      (for (f <- iconsPath.toIO.listFiles if !ignoredIcons.contains(f.getName))
-        yield {
-          require(entries.contains(f.getName),
-                  s"File ${f.getName} is not in $iconsJar.")
-          f.getName
-        }).toVector
+      (for (f <- iconsPath.toIO.listFiles if !ignoredIcons.contains(f.getName) && entries.contains(f.getName))
+        yield f.getName).toVector
     val cmd = "zip" +: iconsJar.toString +: entriesToUpdate
     Shellout.executeStream(iconsPath,
                            Command(cmd, Map(), Shellout.executeStream))
@@ -331,6 +336,7 @@ object Distros {
           tempDir / "Sireum.app" / 'Contents / 'bin / "idea.vmoptions")
         patchImages(tempDir / "Sireum.app" / 'Contents)
         patchIcon(platform, tempDir / "Sireum.app" / 'Contents)
+        rebuildPlatformImpl(tempDir / "Sireum.app" / 'Contents)
       case "win" =>
         val tempDir = buildDir / platform / "sireum-v3" / 'apps / 'idea
         mkdir ! tempDir
@@ -339,18 +345,19 @@ object Distros {
         println("done!")
         extractPlugins(tempDir / 'plugins)
         patchIdeaProperties(platform, tempDir / 'bin / "idea.properties")
-        patchVMOptions(platform, tempDir / 'bin / "idea.exe.vmoptions")
+        //patchVMOptions(platform, tempDir / 'bin / "idea.exe.vmoptions")
         patchVMOptions(platform, tempDir / 'bin / "idea64.exe.vmoptions")
         patchImages(tempDir)
         patchIcon(platform, tempDir)
-        %%('cp,
-           "-p",
-           pwd / 'resources / 'distro / "idea.bat",
-           buildDir / platform / "sireum-v3")
+        rebuildPlatformImpl(tempDir)
+//        %%('cp,
+//           "-p",
+//           pwd / 'resources / 'distro / "idea.bat",
+//           buildDir / platform / "sireum-v3")
         %%('cp,
            "-p",
            pwd / 'resources / 'distro / "idea64.bat",
-           buildDir / platform / "sireum-v3")
+           buildDir / platform / "sireum-v3" / "idea.bat")
         if (isDev)
           mv(buildDir / platform / "sireum-v3",
              buildDir / platform / s"sireum-v3$dev")
@@ -363,10 +370,11 @@ object Distros {
         extractPlugins(tempDir / 'idea / 'plugins)
         patchIdeaProperties(platform,
                             tempDir / 'idea / 'bin / "idea.properties")
-        patchVMOptions(platform, tempDir / 'idea / 'bin / "idea.vmoptions")
+        //patchVMOptions(platform, tempDir / 'idea / 'bin / "idea.vmoptions")
         patchVMOptions(platform, tempDir / 'idea / 'bin / "idea64.vmoptions")
         patchImages(tempDir / 'idea)
         patchIcon(platform, tempDir / 'idea)
+        rebuildPlatformImpl(tempDir / 'idea)
         %%('cp,
            "-p",
            pwd / 'resources / 'distro / 'idea,
@@ -406,6 +414,7 @@ object Distros {
         val bundleDmg = baseDir / 'distros / s"sireum-v3$dev-ive-mac64.dmg"
         rm ! bundle
         rm ! bundleDmg
+        %%('codesign, "--force", "--deep", "--sign", "-", ideaDir / platform / s"Sireum$dev.app")
         %%('tar, 'cfz, bundle, s"Sireum$dev.app")(ideaDir / platform)
         val ver =
           (read ! baseDir / 'distros / s"sireum-v3$dev-VER").substring(0, 7)
