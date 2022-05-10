@@ -345,6 +345,7 @@ lazy val awasT = toSbtCrossProject(
     "org.parboiled" %%% "parboiled" % parboiled2Version,
     "org.scala-lang.modules" %% "scala-async" % "0.10.0",
     "com.lihaoyi" %% "cask" % caskVersion,
+    "com.github.japgolly.scalajs-react" %% "extra_sjs1" % "1.7.7"
   )))
 
 lazy val awasShared = awasT._1
@@ -379,7 +380,8 @@ lazy val awasJs = {
     .settings(webSettings: _*)
     .settings(
       jsDependencies ++= getAwasJSDep(baseDirectory.value),
-      webpack / version := "4.8.1",
+      webpack / version := "4.20.2",
+      webpackMonitoredDirectories += baseDirectory.value / "min/css",
       webpackBundlingMode := BundlingMode.LibraryAndApplication(),
       scalaJSLinkerConfig ~= {
         _.withModuleKind(ModuleKind.CommonJSModule)
@@ -426,10 +428,10 @@ lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dep
   .settings(scalaVersion := scalaVer,
     assemblySettings ++ Seq(
       assembly / logLevel := Level.Error,
-      assemblyJarName in assembly := "awas.jar",
-      assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false),
-      assemblyExcludedJars in assembly := {
-        val cp = (fullClasspath in assembly).value
+      assembly / assemblyJarName := "awas.jar",
+      assembly / assemblyOption := (assembly / assemblyOption).value.copy(includeScala = false),
+      assembly / assemblyExcludedJars := {
+        val cp = (assembly / fullClasspath).value
         cp filter { x =>
           x.data.getName.contains("scalapb") ||
             x.data.getName.contains("protobuf") ||
@@ -437,10 +439,10 @@ lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dep
         }
       },
       assembly / assemblyMergeStrategy := commonMergeStratergy.value,
-      skip in publish := true))
+      skip / publish := true))
 
 lazy val awasPub = project.settings(name := "awas-pub",
-  packageBin in Compile := (assembly in (awasJar, Compile)).value)
+  Compile / packageBin := (assembly in(awasJar, Compile)).value)
 
 
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, airPI)
@@ -533,7 +535,7 @@ lazy val sireumJvm =
             ShadeRule.rename("akka.**" -> "sh4d3.akka.@1").inAll,
             ShadeRule.rename("com.fasterxml.**" -> "sh4d3.com.fasterxml.@1").inAll,
             ShadeRule.rename("com.typesafe.**" -> "sh4d3.com.typesafe.@1").inAll,
-            ShadeRule.rename("org.kohsuke.**" -> "sh4d3.org.kohsuke.@1").inAll,
+            ShadeRule.rename("org.kohsuke.**" -> "sh4d3.org.kohsuke.@1").inAll
           ),
           assembly / assemblyMergeStrategy := commonMergeStratergy.value
         ): _*
