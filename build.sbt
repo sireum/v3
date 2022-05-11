@@ -131,6 +131,8 @@ lazy val utestVersion = property("org.sireum.version.utest")
 
 lazy val runtimeVersion = property("org.sireum.version.library") // ghLatestTag("sireum", "kekinian")
 
+lazy val slangVersion = property("org.sireum.version.slang")
+
 val BUILD_FILENAME = "BUILD"
 
 val isParallelBuild = "false" != System.getenv("SIREUM_PARALLEL_BUILD")
@@ -223,11 +225,18 @@ lazy val webSettings = sireumSettings ++ Seq(
 
 lazy val commonSlangSettings = Seq(
   addCompilerPlugin("org.sireum" %% "scalac-plugin" % sireumScalacVersion),
-  libraryDependencies += "org.sireum.kekinian" %%% "library-shared" % runtimeVersion)
+  libraryDependencies ++= Seq(
+    "org.sireum.kekinian" %%% "library-shared" % runtimeVersion,
+    "org.sireum.kekinian" %%% "slang-ast" % slangVersion
+  )
+)
 
 lazy val slangSettings = sireumSettings ++ commonSlangSettings ++ Seq(
   scalacOptions ++= Seq("-Yrangepos"),
-  libraryDependencies += "org.sireum.kekinian" %%% "test" % runtimeVersion % "test")
+  libraryDependencies ++= Seq(
+    "org.sireum.kekinian" %%% "test" % runtimeVersion % "test"
+  )
+)
 
 val depOpt = Some("test->test;compile->compile;test->compile")
 
@@ -321,7 +330,14 @@ lazy val webJvm = webT._2
 lazy val webJs = webT._3.settings(webSettings: _*)
 
 lazy val airPI = new ProjectInfo("aadl/ir", isCross = true, utilPI, testPI)
-lazy val airT = toSbtCrossProject(airPI,slangSettings)
+lazy val airT = toSbtCrossProject(
+  airPI,
+  slangSettings ++ Seq(
+    libraryDependencies ++= Seq(
+      "org.sireum.kekinian" %%% "slang-ast" % slangVersion
+    )
+  )
+)
 lazy val airShared = airT._1
 lazy val airJvm = airT._2
 lazy val airJs = airT._3
