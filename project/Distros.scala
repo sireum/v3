@@ -295,6 +295,8 @@ object Distros {
     val entriesToUpdate =
       (for (f <- iconsPath.toIO.listFiles if !ignoredIcons.contains(f.getName) && entries.contains(f.getName))
         yield f.getName).toVector
+    println(entries)
+    println(entriesToUpdate)
     val cmd = "zip" +: iconsJar.toString +: entriesToUpdate
     Shellout.executeStream(iconsPath,
                            Command(cmd, Map(), Shellout.executeStream))
