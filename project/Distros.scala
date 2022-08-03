@@ -224,8 +224,8 @@ object Distros {
   }
 
   def rebuildPlatformImpl(path: Path): Unit = {
-    val filePath = path / 'lib / "platform-impl.jar"
-    val dir = path / 'lib / "platform-impl"
+    val filePath = path / 'lib / "app.jar"
+    val dir = path / 'lib / "app"
     mkdir ! dir
     %%('unzip, filePath)(dir)
     rm ! filePath
@@ -234,7 +234,7 @@ object Distros {
   }
 
   def patchImages(path: Path): Unit = {
-    val filePath = path / 'lib / "platform-impl.jar"
+    val filePath = path / 'lib / "app.jar"
     print(s"Patching $filePath ... ")
     if (isDev)
       %%('zip,
@@ -280,7 +280,7 @@ object Distros {
     print(s"Replacing icon $dirPath/$filename ... ")
     %%('cp, srcFilename, dirPath / filename)(iconsPath)
     println("done!")
-    val iconsJar = path / 'lib / "platform-impl.jar"
+    val iconsJar = path / 'lib / "app.jar"
     print(s"Patching $iconsJar ... ")
     val jis = new JarInputStream(new FileInputStream(iconsJar.toIO))
     var entries = Set[String]()
