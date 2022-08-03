@@ -147,6 +147,8 @@ val refreshSlang = TaskKey[Unit]("refresh-slang", "Refresh Slang files.")
 Global / parallelExecution := isParallelBuild
 Global / concurrentRestrictions ++= (if (isParallelBuild) Seq() else Seq(Tags.limitAll(1)))
 
+Global / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % "always"
+
 addCommandAlias("refresh-slang", "; project sireum; refreshSlang")
 addCommandAlias("fatjar", "; project sireum; assembly")
 

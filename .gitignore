@@ -43,3 +43,6 @@ scratch.sc
 /web/js/playground
 /aadl
 out
+package-lock.json
+node_modules
+package.json
