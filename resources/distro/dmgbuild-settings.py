@@ -23,7 +23,7 @@ def icon_from_app(app_path):
 
 format = defines.get('format', 'UDZO')
 
-size = defines.get('size', '4000M')
+size = defines.get('size', '8000M')
 
 # Files to include
 files = [application]
