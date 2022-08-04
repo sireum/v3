@@ -172,7 +172,7 @@ lazy val sireumSettings = Seq(
   Test / logBuffered := false,
   autoAPIMappings := true,
   apiURL := Some(url("http://v3.sireum.org/api/")),
-  resolvers ++= Seq(Resolver.sonatypeRepo("public"), "jitpack" at "https://jitpack.io"),
+  resolvers ++= Resolver.sonatypeOssRepos("public") :+ ("jitpack" at "https://jitpack.io"),
   dependencyUpdatesFilter -= moduleFilter(organization = "com.lihaoyi", name = "upickle"),
   dependencyUpdatesFilter -= moduleFilter(organization = "org.scalatest"),
   dependencyUpdatesFilter -= moduleFilter(organization = "org.eclipse.jetty")
@@ -462,7 +462,7 @@ lazy val awasJar = project.enablePlugins(AssemblyPlugin).dependsOn(awasJarPI.dep
       skip / publish := true))
 
 lazy val awasPub = project.settings(name := "awas-pub",
-  Compile / packageBin := (assembly in(awasJar, Compile)).value)
+  Compile / packageBin := (awasJar / Compile / assembly).value)
 
 
 lazy val minixPI = new ProjectInfo("aadl/minix", isCross = false, airPI)
