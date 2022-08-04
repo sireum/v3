@@ -70,7 +70,6 @@ object Distros {
           Map(
             "python" -> 201922,
             "rst" -> 199749,
-            "latex" -> 18476
           )
         else Map())
 
@@ -237,7 +236,7 @@ object Distros {
     val filePath = path / 'lib / "app.jar"
     print(s"Patching $filePath ... ")
     if (isDev)
-      %%('zip, "-u",
+      %%('zip, "update",
          filePath,
          "idea_community_about.png",
          "idea_community_about@2x.png",
@@ -245,7 +244,7 @@ object Distros {
          "idea_community_logo@2x.png")(
         pwd / 'resources / 'distro / 'images / 'dev)
     else
-      %%('zip, "-u",
+      %%('zip, "update",
          filePath,
          "idea_community_about.png",
          "idea_community_about@2x.png",
@@ -295,7 +294,7 @@ object Distros {
     val entriesToUpdate =
       (for (f <- iconsPath.toIO.listFiles if !ignoredIcons.contains(f.getName) && entries.contains(f.getName))
         yield f.getName).toVector
-    val cmd = "zip" +: ("-u" +: (iconsJar.toString +: entriesToUpdate))
+    val cmd = "zip" +: ("update" +: (iconsJar.toString +: entriesToUpdate))
     Shellout.executeStream(iconsPath,
                            Command(cmd, Map(), Shellout.executeStream))
     println("done!")
