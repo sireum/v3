@@ -45,7 +45,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  lazy val ideaVer: String = if (isDev) "2022.3.1" else "2022.3.1"
+  lazy val ideaVer: String = if (isDev) "2022.2.4" else "2022.2.4"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -62,16 +62,8 @@ object Distros {
 
   lazy val pluginUpdateIdMap: Map[String, Int] = Map(
     "sireum" -> (if (isDev) 0 else 0),
-    "jdt" -> (if (isDev) 0 else 0),
-    "scala" -> (if (isDev) 269673 else 269673),
-    "asm" -> 137281,
-    "antlr" -> 257190
-  ) ++ (if (isDev)
-          Map(
-            "python" -> 263951,
-            "rst" -> 259193,
-          )
-        else Map())
+    "scala" -> (if (isDev) 258933 else 258933),
+  )
 
   lazy val pluginUpdateUrlMap: Map[String, (String, String)] = Map(
     //"ignore" -> ("2.3.2", "https://github.com/hsz/idea-gitignore/releases/download/v2.3.2/idea-gitignore-2.3.2.zip")
