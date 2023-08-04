@@ -195,8 +195,7 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.jgrapht" % "jgrapht-io" % jgraphtVersion,
     "com.lihaoyi" %% "ammonite-ops" % ammoniteOpsVersion,
     "com.sksamuel.diff" % "diff" % diffVersion,
-    "com.novocode" % "junit-interface" % junitInterfaceVersion,
-    "org.sireum.kekinian" %% "library" % runtimeVersion,
+    "com.novocode" % "junit-interface" % junitInterfaceVersion
   ),
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
 )
