@@ -45,7 +45,7 @@ object Distros {
     %%('git, 'log, "-n", "1", "--pretty=format:%H")(pwd).out.lines.head.trim
   }
 
-  lazy val ideaVer: String = if (isDev) "2022.2.4" else "2022.2.4"
+  lazy val ideaVer: String = if (isDev) "2023.2" else "2023.2"
 
   val ideaExtMap = Map(
     "mac" -> ".dmg",
@@ -62,7 +62,7 @@ object Distros {
 
   lazy val pluginUpdateIdMap: Map[String, Int] = Map(
     "sireum" -> (if (isDev) 0 else 0),
-    "scala" -> (if (isDev) 258933 else 258933),
+    "scala" -> (if (isDev) 367684 else 367684),
   )
 
   lazy val pluginUpdateUrlMap: Map[String, (String, String)] = Map(
