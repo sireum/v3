@@ -125,8 +125,6 @@ lazy val snakeYamlVersion = property("org.sireum.version.snakeyaml")
 
 lazy val junitInterfaceVersion = property("org.sireum.version.junit-interface")
 
-lazy val nuprocessVersion = property("org.sireum.version.nuprocess")
-
 lazy val utestVersion = property("org.sireum.version.utest")
 
 lazy val runtimeVersion = property("org.sireum.version.library") // ghLatestTag("sireum", "kekinian")
@@ -197,8 +195,8 @@ lazy val sireumJvmSettings = sireumSharedSettings ++ Seq(
     "org.jgrapht" % "jgrapht-io" % jgraphtVersion,
     "com.lihaoyi" %% "ammonite-ops" % ammoniteOpsVersion,
     "com.sksamuel.diff" % "diff" % diffVersion,
-    "com.zaxxer" % "nuprocess" % nuprocessVersion,
-    "com.novocode" % "junit-interface" % junitInterfaceVersion
+    "com.novocode" % "junit-interface" % junitInterfaceVersion,
+    "org.sireum.kekinian" %% "library" % runtimeVersion,
   ),
   testOptions += Tests.Argument(TestFrameworks.JUnit, "-q", "-v")
 )
